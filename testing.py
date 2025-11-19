@@ -50,7 +50,7 @@ soi = {'rho_n': 2.0e-6,   'rho_m': 0.0,   'd': 500.0}
 sub = {'rho_n': 2.07e-6,  'rho_m': 0.0,   'd': 0.0}     # semi-infinite
 
 layers = [air, mrl, cap, soi, sub]
-rough = [3.0, 5.0, 8.6, 3.0]  # σ_air/MRL, σ_MRL/cap, σ_cap/SOI, σ_SOI/sub  (Å)
+rough = [3.0, 5.0, 8.6, 3.0]  # sigma_air/MRL, sigma_MRL/cap, sigma_cap/SOI, sigma_SOI/sub  (Å)
 
 Q = np.linspace(0.005, 0.25, 1000)  # Å^-1
 R_up = reflectivity(Q, layers, rough, spin='up',   bkg=1e-5)
