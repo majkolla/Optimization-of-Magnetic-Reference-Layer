@@ -1,0 +1,205 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{amsmath}
+\title{Optimization of Magnetic Reference Layer Design in Polarized Neutron Reflectometry}
+\author{Michael birtman}
+\date{October 2025}
+
+\begin{document}
+
+\maketitle
+
+\section{Optimization problem}
+
+\subsection{Primary opt}
+\paragraph{Objective:}
+In the paper a metric TSF (total sensitivity figure) was presented as a comprehensive metric to evaluate an MRL performance. It does it by combining multiple different measures. Thus giving us the primary optimzation goal to choose MRL parameters such taht TSF is maximized. 
+
+\paragraph{Decision Vars:}
+\begin{itemize}
+    \item \emph{Co:Ti ratio} as the paper presented
+    \item MRL thickness: (was fixed in the study)
+    \item MRL interfacial roughness: (fixed in study)
+    \item capping layer (AL2O3): (we talked about it in the fair, something we can optimize for \item Experimental Parameters: 
+    \item Material Choice for MRL: beyond CoTi we can choose (Fe, Ni, CoTi) 
+\end{itemize}
+
+\paragraph{Contraints: }
+\begin{itemize}
+    \item CoTi ratio $\in [0,1]$
+    \item Thickness and Roughness - we want the layer to grow in a uniformly manner, and roughness should be low. 
+    \item Magnetic Saturation Constraint - must be able to be satureated by the magnetic field during the measurement. Mainly for thicker layers 
+    \item MRL and capping should not react with the substrate or sample 
+    \item Fabrication Feasibility (maybe not super relevant for the optimziation problem idk)
+    \item 
+\end{itemize}
+
+\subsection{Secondary Opt}
+We want to maximize TSF but we probably need to consider cost and also stability and durability. So let's formulate optimzation problems for those as well. 
+
+\paragraph{Fabrication cost (min problem): } 
+Here we want to clearly define for different materials and methods. The papers talked about the high cost of Au makes it less ideal even tho the performance is improved. We can thus make sure that if we have to similar solution with respect to TSF we have the cost metric to guide us. Unforuntaly i cannot really define anything since i dont know anything and it wasnt really discussed much 
+
+\paragraph{Stability and Durability (max)} 
+In  the paper they talked about choosing AI2O3 becuase its more thermally stable unlike SiO2. Also talked about the problem of robustness w.r.t Au. This wasnt dicussed in much detail in the paper but modelling such a objective fucntion may yeild utility. 
+
+\paragraph{Robustness and Performce (max): } the MRL should perform well for a range of possible SOI types. As addressed by in the paper by evaluating each MRL against a range of SOI and then combining those in the TSF. We also want robustness in the fabrication tolerance. So if the design is slightly off the optimal we should get a near maximial TSF, meaning that it's not too sensitive. 
+
+
+Combining the above, the design problem can be formulated as a multi-objective optimization. For example:
+
+\begin{itemize}
+    \item \textbf{Objective 1:} maximize $\mathrm{TSF}(\mathbf{x})$ – the total sensitivity figure for design $\mathbf{x}$ (where $\mathbf{x}$ is the vector of decision variables like composition, thickness, etc.).
+    \item \textbf{Objective 2:} minimize $\mathrm{Cost}(\mathbf{x})$.
+    \item \textbf{Objective 3:} maximize $\mathrm{Stability}(\mathbf{x})$ (or minimize risk of failure/degradation).
+    \item \textbf{Objective 4:} maximize $\mathrm{Robustness}(\mathbf{x})$ (which could be quantified by performance spread across scenarios or tolerance to perturbation).
+\end{itemize}
+
+Subject to:
+\[
+x_{\text{CoTi}} \in [0,1], \quad
+x_{\text{thickness}} \in [50,200]~\text{\AA}
+\]
+(just example bounds), and any discrete choices ( material type) etc.
+
+We can go about this in two main ways, either put them together by: 
+\[
+U(x) = TSF(x) -\lambda \cdot\text{Cost}(x) + \mu \cdot \text{Stability}
+\]
+
+Or we could go a Pareto way which clearly will show the trade offs of each solution and then we can use expertize to properly assess what we ought to do. 
+
+\section{Optimzation Fcuntion}
+We have, where $\mathbf{x}$ are the parameters we optimze. So let's define them: 
+
+\begin{itemize}
+    \item $x_{\mathrm{Co}}$: Co atomic fraction in the Co–Ti magnetic reference layer (MRL).
+    \begin{itemize}
+        \item Type: continuous, unitless in $[0,1]$.
+        \item Effect: sets the MRL’s nuclear SLD $\rho_{n}(\mathbf{x})$ and magnetic SLD $\rho_{m}(\mathbf{x})$ — controls spin contrast.
+    \end{itemize}
+
+    \item $d_{\mathrm{MRL}}$: Physical thickness of the MRL.
+    \begin{itemize}
+        \item Type: continuous.
+        \item Effect: too thin → weak contrast; too thick → MRL dominates the reflectivity and can reduce SOI sensitivity.
+    \end{itemize}
+
+    \item $\sigma_{\mathrm{MRL/sub}}$: \textbf{Interface roughness} (rms) between substrate and MRL.
+    \begin{itemize}
+        \item Type: continuous (Å).
+        \item Effect: rougher interfaces smear high-$Q$ fringes and reduce sensitivity.
+    \end{itemize}
+
+    \item $\sigma_{\mathrm{MRL/cap}}$: \textbf{Interface roughness} (rms) between MRL and capping layer.
+    \begin{itemize}
+        \item Type: continuous (Å).
+        \item Effect: same role as above, but for the MRL–cap boundary.
+    \end{itemize}
+
+    \item $d_{\mathrm{cap}}$: \textbf{Capping layer thickness} (e.g., Al$_2$O$_3$, SiO$_2$, Au).
+    \begin{itemize}
+        \item Type: continuous (Å).
+        \item Effect: protects chemistry; its SLD and thickness add background/phase shifts.
+    \end{itemize}
+
+    \item $\sigma_{\mathrm{cap/SOI}}$: \textbf{Interface roughness} (rms) between cap and the \textbf{sample of interest (SOI)}.
+    \begin{itemize}
+        \item Type: continuous (Å).
+        \item Effect: controls how cleanly the SOI features appear in reflectivity.
+    \end{itemize}
+
+    \item $c_{\mathrm{cap}}$: \textbf{Capping material choice}.
+    \begin{itemize}
+        \item Type: categorical (e.g., $\{\mathrm{Al_2O_3}, \mathrm{SiO_2}, \mathrm{Au}\}$).
+        \item Effect: different nuclear SLDs and stabilities; low-SLD caps tend to preserve
+
+
+\[
+\mathrm{TSF}(\mathbf{x}) = \sum_{t \in \mathcal{T}} \int_{Q_{\min}}^{Q_{\max}} 
+w(Q) \left( 
+\left| S_{\uparrow}^{(t)}(Q; \mathbf{x}) \right| 
++ \left| S_{\downarrow}^{(t)}(Q; \mathbf{x}) \right| 
++ \left| S_{\uparrow}^{(t)}(Q; \mathbf{x}) - S_{\downarrow}^{(t)}(Q; \mathbf{x}) \right| 
+\right) dQ
+\]
+
+\[
+\mathrm{SFM_{tot}}(\mathbf{x}) = \sum_{t \in \mathcal{T}} \int_{Q_{\min}}^{Q_{\max}} 
+w(Q) \left( 
+\left| S_{\uparrow}^{(t)}(Q; \mathbf{x}) \right| 
++ \left| S_{\downarrow}^{(t)}(Q; \mathbf{x}) \right| 
+\right) dQ
+\]
+
+\[
+\mathrm{MCF}(\mathbf{x}) = \sum_{t \in \mathcal{T}} \int_{Q_{\min}}^{Q_{\max}} 
+w(Q) 
+\left| S_{\uparrow}^{(t)}(Q; \mathbf{x}) - S_{\downarrow}^{(t)}(Q; \mathbf{x}) \right| 
+dQ
+\]
+
+These are the basic function, we can then define and normalize 
+\[
+J_w(x) = w_1 \mathrm{SFM}_{tot}^*(x) + w_2 \mathrm{MCF}^*(x) 
+\]
+where the star denotes the normalized metric. we also add weights so that we can control the contrast between the two metrics. We can also define a bi objective Pareto formulation. We can solve this and get the Pareto set P. 
+
+We also can define 
+\begin{itemize}
+    \item $A$: coated area $[\mathrm{m}^2]$
+    \item Layers $l = 1, \ldots, L$ with thickness $d_l~[\mathrm{m}]$
+    \item Material set $\mathcal{M}$ (e.g., $\{\mathrm{Co}, \mathrm{Ti}, \mathrm{Al_2O_3}, \ldots\}$)
+    \item $w_{l,m} \in [0,1]$: volume (or mass) fraction of material $m$ in layer $l$ (pure layer: one $w_{l,m} = 1$); $\sum_{m \in \mathcal{M}} w_{l,m} = 1$
+    \item $\rho_m$: density of material $m~[\mathrm{kg/m^3}]$
+    \item $p_m$: price of material $m~[\mathrm{SEK }/\mathrm{kg}]$ 
+    \item $\eta_{l,m} \ge 1$: deposition \textbf{wastage factor} for $m$ in layer $l$ (target inefficiency, overspray)
+    \item $r_l$: effective deposition rate for layer $l~[\mathrm{m/s}]$
+    \item $c_l^{\mathrm{time}}$: tool cost per unit time for layer $l~[\$/\mathrm{s}]$
+    \item $t_l^{0h}$: per-layer overhead time (pumpdown, target conditioning) $[\mathrm{s}]$
+    \item $C_{\mathrm{setup}}$: one-time run/setup cost $[\$]$
+    \item $Y \in (0,1]$: yield to first pass (expected good parts fraction)
+\end{itemize}
+
+
+\[
+C_{\mathrm{mat}}(\mathbf{x}) 
+= A \sum_{l=1}^{L} d_l \sum_{m \in \mathcal{M}} 
+\left( w_{l,m} \, \rho_m \, p_m \, \eta_{l,m} \right)
+\]
+
+\[
+C_{\mathrm{proc}}(\mathbf{x}) 
+= C_{\mathrm{setup}} + \sum_{l=1}^{L} 
+c_l^{\mathrm{time}} \, t_l
+\]
+
+\[
+\mathrm{Cost}(\mathbf{x}) 
+= \frac{C_{\mathrm{mat}}(\mathbf{x}) + C_{\mathrm{proc}}(\mathbf{x})}{Y}
+\]
+
+We can define some cost function that we want to minimize 
+
+
+\[
+\mathrm{Stability}(\mathbf{x}) =
+s_{\mathrm{cap}}(c_{\mathrm{cap}}) -
+\alpha_{\sigma} \left(
+\sigma_{\mathrm{MRL/sub}} +
+\sigma_{\mathrm{MRL/cap}} +
+\sigma_{\mathrm{cap/SOI}}
+\right)
+- \alpha_{B}\, \mathbb{I}\{ B < B_{\mathrm{sat}}(\mathbf{x}) \}
+\]
+
+
+
+\section{Optimzation Algorthims}
+Here I'll explain different algorthims and talk about which i feel will fit best for this type of problem. 
+
+\subsection{Evolutionary Alg}
+These types of methods work when we have a moderatly high dim problem like 10s of decisions vars, and when we havea  non convex and multiple objective problems. We don't need a gradient to be defined so it can create a set of solution approximating the pareto front in one run which makes this a good candidate (Im specifically talking about NSGA-II). 
+
+
+\end{document}
