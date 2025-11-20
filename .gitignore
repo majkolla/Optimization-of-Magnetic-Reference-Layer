@@ -12,4 +12,4 @@ report/*.synctex
 *.synctex
 
 Opt_paper.pdf
-.latex-preview-cache/main
+.latex-preview-cache/*
