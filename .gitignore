@@ -4,3 +4,9 @@ report/*.dvi
 report/*.log 
 report/*.out 
 report/*.synctex
+
+*.aux
+*.dvi
+*.log 
+*.out 
+*.synctex
