@@ -17,7 +17,7 @@ class Base2OptimizationProblem:
     x = [x_Co, d_MRL, sigma_MRL/sub, sigma_MRL/cap, d_cap,
         sigma_cap/SOI, cap_material_id, B, lambda, bkg]
     """
-    def __init__(self, materials, soi_scenarios, q_grid, bounds, weights=None):
+    def __init__(self, materials, soi_scenarios, q_grid, bounds, weights): #add functionality for weights later
         """
         materials: represented in a multilevel disctionary,     
         with nuclear SLDs and magnetic model hooks. 
@@ -79,14 +79,14 @@ class Base2OptimizationProblem:
         for t in self.T:
             
             Lu, Su, bkg = self._layers(x, t['rho_n'], t['d'], 'up')
-            Ld, Sd, _   = self._layers(x, t['rho_n'], t['d'], 'down')
-            R_up_full   = reflectivity(self.Q, Lu, Su, bkg=bkg)
+            Ld, Sd, _ = self._layers(x, t['rho_n'], t['d'], 'down')
+            R_up_full = reflectivity(self.Q, Lu, Su, bkg=bkg)
             R_down_full = reflectivity(self.Q, Ld, Sd, bkg=bkg)
             
             # references (without SOI layer)
             Lu_ref = [Lu[i] for i in [0,1,2,4]]; Su_ref = [Su[i] for i in [0,1,3]]
             Ld_ref = [Ld[i] for i in [0,1,2,4]]; Sd_ref = [Sd[i] for i in [0,1,3]]
-            R_up_ref   = reflectivity(self.Q, Lu_ref, Su_ref, bkg=bkg)
+            R_up_ref = reflectivity(self.Q, Lu_ref, Su_ref, bkg=bkg)
             R_down_ref = reflectivity(self.Q, Ld_ref, Sd_ref, bkg=bkg)
             
             # compute sensitivities & FOMs
