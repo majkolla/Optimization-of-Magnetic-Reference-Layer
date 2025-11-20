@@ -10,3 +10,5 @@ report/*.synctex
 *.log 
 *.out 
 *.synctex
+
+Opt_paper.pdf
