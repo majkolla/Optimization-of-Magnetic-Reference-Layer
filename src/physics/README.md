@@ -74,3 +74,24 @@ $
 R_s(Q; x) =
 F(Q)\, \left| \Gamma_{0,s}(Q) \right|^2 + b.
 $
+
+
+
+
+# Theory
+
+### Basic understanding 
+- https://ncnr.nist.gov/programs/reflect/references/pnrchapti.pdf?utm_source=chatgpt.com
+- https://www.nist.gov/ncnr/acns-2020-tutorial-ii-practical-approach-fitting-neutron-reflectometry-data/understanding?utm_source=chatgpt.com
+- https://neutrons.ornl.gov/sites/default/files/XNS_school_NR_CFM_AUG_2023_images_1_to_50.pdf?utm_source=chatgpt.com
+- https://indico.stfc.ac.uk/event/355/contributions/2208/attachments/786/1380/NR%20Group%20Training%20course%20PNR%20Lecture.pdf?utm_source=chatgpt.com
+
+### Math 
+- https://journals.aps.org/pr/abstract/10.1103/PhysRev.95.359?utm_source=chatgpt.com
+- https://opg.optica.org/osac/fulltext.cfm?uri=osac-4-5-1497
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC4970493/?utm_source=chatgpt.com
+
+
+### Building the software for fitting stacks
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC4970493/?utm_source=chatgpt.com
+- https://journals.iucr.org/j/issues/2022/04/00/ge5118/ge5118.pdf?utm_source=chatgpt.com
