@@ -63,4 +63,15 @@ First represent the neutron as a plane wave: $\Phi(k,r) = e^{ikr}$.
 The motion of a netruon is described by s.e. $-\frac{\hbar^2}{2m}\Delta^2 + V(r) = E\Phi$. Inside matter, neutron experience a nuclear potential that can be described by coherent scattering length b and number density N. The SLD is $\rho = Nb$ and $V = 2\pi\hbar^2/m Nb$. And if we have multicomponent materials we just sum over them. They get Helmholtz wave equation, so finally we get that all material information is encoded in $\rho$ where the netron is a wave that propagate in a medium with an index that depends on $\rho$. Then they define a refractive index that is similar to *normal* optics. This is basically a refractive index and we get that neutrons see most materials as slighty lower index than vacuum, so everything reflects below a crtiical angle (Q). 
 
 
-So now we can look into a flat film, uniform in plane with thichness L, infinite in x, y. Let's assume that we have: $\rho(x,y,z) = \rho(z)$. They do some shit and utilize that wehave $k_x, k_y$ are unchanged and independent so they sepearet them and find the solutions for a constant $\rho$. 
+So now we can look into a flat film, uniform in plane with thichness L, infinite in x, y. Let's assume that we have: $\rho(x,y,z) = \rho(z)$. They do some shit and utilize that wehave $k_x, k_y$ are unchanged and independent so they sepearet them and find the solutions for a constant $\rho$. We can then combine multiple regions and solve it using the usual matrix form for refraction stuff. 
+
+We can also look into a nonuniform SLD profile. This would basically mean that we're dropping the basic assumption of $\rho$ being constant. Here they suggest that we approximate $\rho$ by creating many thin bins of thickness dL where each of those has a constant SLD (Figure 1.6). 
+
+The point is: 
+- divide the film into N bins 
+- Each bin j has constant $\rho$
+- for each bin, we have a 2x2 transfer matrix of the form eq 1.24 in the article. This is what I've been trying to implement in python. 
+
+
+So generally they say a good rule of thumb is $dL \sim \pi/Q_{max}$. They also note that there is an inverse problem here. We get a measure of intensity from the experiment: $|r|^2$ and we want $\rho$. So we cannot simply do direct inversion becuase the phase of r is lost. Thus they do fitting of nonlinear least squares to fit $\rho$ to the data, and then the solutions may not be unique. They also do mention that reference layer methods can give the full complex r(Q) and give a uniqe inversion. My good friend is working on an inverse problem library in python, and i might just write something there that could solve this, we'll see. 
+
