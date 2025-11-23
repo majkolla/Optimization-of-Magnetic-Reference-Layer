@@ -34,7 +34,6 @@ Will contains the problem class, bounds, SOI:s constraints etc.
 
 ## Theory 
 
-
 ### Basic understanding 
 - [Polarized Neutron Reflectometry](https://ncnr.nist.gov/programs/reflect/references/pnrchapti.pdf)
 - [Understanding interlayer coupling and buried interfacial magnetism using polarized neutron reflectometry](https://www.nist.gov/ncnr/acns-2020-tutorial-ii-practical-approach-fitting-neutron-reflectometry-data/understanding)
