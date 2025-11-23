@@ -33,6 +33,7 @@ Will contains the problem class, bounds, SOI:s constraints etc.
 
 
 ## Theory 
+These are my personal notes for understanding the material, and not a part of the final report, I might take inspo from this, but i'll have very low writing standards.
 
 ### Basic understanding 
 - [Polarized Neutron Reflectometry](https://ncnr.nist.gov/programs/reflect/references/pnrchapti.pdf)
@@ -49,3 +50,14 @@ Will contains the problem class, bounds, SOI:s constraints etc.
 ### Building the software for fitting stacks
 - [ GenX: an extensible X-ray reflectivity refinement program utilizing differential evolution](https://onlinelibrary.wiley.com/doi/abs/10.1107/S0021889807045086)
 - [GenX 3: the latest generation of an established tool](https://journals.iucr.org/j/issues/2022/04/00/ge5118/ge5118.pdf)
+
+### Polarized Neutron Reflectometry
+We can describe a netron as a QM wave and work with it's reflections from layered materials. So we're intersted in the reflectivity function: $R(Q) = |r(Q)|^2$ as a function of momentum transfew Q and how it's connected to the SLD profile $\rho(z)$.
+
+
+First represent the neutron as a plane wave: $\Phi(k,r) = e^{ikr}$. 
+- k = (k_x, k_y, k_z)
+- r = (x,y,z)
+- $|\Phi|^2$ is the probability density of finding the neutron at r with momentum p. Howeverm note that a real neutron is a wavepacket, meaning that it's a superposiition of plane waves, but for this problem a single wave approx. is good enough. 
+
+The motion of a netruon is described by s.e. $-\frac{\hbar^2}{2m}\Delta^2 + V(r) = E\Phi$. Inside matter, neutron experience a nuclear potential that can be described by coherent scattering length b and number density N. The SLD is $\rho = Nb$ and $V = 2\pi\hbar^2/m Nb$. And if we have multicomponent materials we just sum over them. They get Helmholtz wave equation, so finally we get that all material information is encoded in $\rho$ where the netron is a wave that propagate in a medium with an index that depends on $\rho$
