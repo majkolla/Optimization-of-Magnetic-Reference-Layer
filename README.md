@@ -29,3 +29,27 @@ In the physics part i'd define the reflecitivty functions, sfm, mcf, tsf, sensit
 
 #### Base2 
 Will contains the problem class, bounds, SOI:s constraints etc. 
+
+
+# Goals
+- Thickness of MRL
+- material of capping layer 
+- thickness of capping layer 
+
+*extra*
+- concentration of Co-Ti
+- better materials than Co-Ti
+- reference layer? (for non polizerar thing so we dont need no magnetic stuff)
+
+
+- Figure of merit (derivites, perhaps) 
+
+
+- pipeline
+Researcher plugin SOI get best layer type.
+
+
+
+
+
+what is an analyzer 
