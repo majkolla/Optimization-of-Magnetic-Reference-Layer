@@ -17,6 +17,100 @@
 \newline
 Polarized neutron reflectometry measures how neutrons reflect from a layered sample and provides two reflectivity curves (spin up and spin down). So each neutron spin state has a different SLD, the difference means that by introducing an MRL we get a difference in the reflectivity between different neutron spin channels. The reflectivity is governed by SLD variations at interfaces (WHY?). 
 
+
+
+
+\subsection*{Physics}
+\subsubsection*{Kinematics}
+
+\[
+Q = \frac{4\pi}{\lambda} \sin\theta.
+\]
+
+For layer \( j = 0, \ldots, N \) (\(0\) = ambient, \(N\) = semi-infinite substrate), 
+define the \textbf{spin-dependent SLD} in the layer j as: 
+
+\[
+\rho^{(\uparrow)}_j(z) = \rho_{n,j}(z) + \rho_{m,j}(z),
+\qquad
+\rho^{(\downarrow)}_j(z) = \rho_{n,j}(z) - \rho_{m,j}(z).
+\]
+
+Here
+\[
+\rho_n = \sum_i N_i b_i, 
+\qquad
+\rho_m = C M
+\]
+(where \(M\) is the in-plane magnetization).  
+These are exactly the spin-SLD relations used in the paper.
+
+\medskip
+
+Define the \(z\)-component wavevector in layer \(j\): 
+
+\[
+k_{j,s}(Q)
+=
+\sqrt{\frac{Q^2}{4} - 4\pi \rho^{(s)}_j},
+\qquad
+s \in \{\uparrow,\downarrow\}.
+\]
+
+\subsection*{Interface Fresnel coefficient with roughness (Nevot--Croce)}
+
+\[
+r_{j,j+1,s}(Q)
+=
+\frac{k_{j,s} - k_{j+1,s}}{k_{j,s} + k_{j+1,s}}
+\exp\!\left(
+-2 k_{j,s} k_{j+1,s} \, \sigma_{j,j+1}^2
+\right),
+\]
+
+where \(\sigma_{j,j+1}\) is the rms roughness of interface \( j|j+1 \).  
+The paper states roughness is included as Gaussian damping at interfaces.
+
+\subsection*{Parratt recursion (propagate phases through thickness \(d_j\))}
+
+For the semi-infinite substrate:
+
+\[
+\Gamma_{N,s}(Q) = 0.
+\]
+
+For layer \(j\):
+
+\[
+\Gamma_{j,s}(Q)
+=
+\frac{
+r_{j,j+1,s}(Q)
++
+\Gamma_{j+1,s}(Q)
+\exp\!\left(2 i k_{j+1,s}(Q) d_{j+1}\right)
+}{
+1
++
+r_{j,j+1,s}(Q)\,
+\Gamma_{j+1,s}(Q)
+\exp\!\left(2 i k_{j+1,s}(Q) d_{j+1}\right)
+}.
+\]
+
+\subsection*{Specular reflectivity}
+
+With optional footprint \(F(Q) \le 1\) and background \(b\):
+
+\[
+R_s(Q; x)
+=
+F(Q)\, \left| \Gamma_{0,s}(Q) \right|^2 + b.
+\]
+
+
+
+
 \section*{Baseline Solution}
 Since I will experiment with solutions, I think the first solution to gain insight on the problem is by implementing a simple "baseline" solution. This will be done by simply finding the optimum for the strucuture given at the paper [bla bla bla]. This would be so that we can see if the further experimentation on the structural approach is known to better or worse than the baseline solution that is presented in the paper. In part we'll simply solve for the optimal without looking at different materials. 
 \newline
