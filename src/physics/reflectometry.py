@@ -1,16 +1,9 @@
 import numpy as np
 
 def _kz(Q, rho):
-    # z-wavevector; allow complex in total reflection region
     return np.sqrt((Q**2)/4.0 - 4.0*np.pi*rho + 0j)
 
 def parratt_amplitude(Q, layers, sigmas):
-    """w
-    layers: [{'rho': float, 'd': float}, ...] from (0) to substrate (N);
-            ambient/substrate thickness ignored
-    sigmas: [sigma_0|1, sigma_1|2, ..., sigma_{N-1}|N]
-    Returns Gamma_0(Q) (or the complex reflection amplitude).
-    """
     N = len(layers) - 1
 
     k = [ _kz(Q, L['rho']) for L in layers ]
