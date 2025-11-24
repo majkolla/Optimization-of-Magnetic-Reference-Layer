@@ -49,3 +49,6 @@ There is an explicit form of spin dependent neutron wave function, where we have
 Finally i understand that i have two $\rho$, one that is spin independent and one that is dependent. They then talk about the pauli group, as a operator basis for spin. Then they use the spin rotation op. which is used for the polarization part. 
 
 I find this part intersting, trying to make it more intuitive by introducing an polarization vector object. I'll not write the math here, but basically, they define $P = (P_x, P_y, P_z)$ that can represent the spin orientation. then they introduce the density matrix for one neutron. (See eq. 1.42 and 1.43). They show that you can write the density matrix using the polarization vecotr and pauli matrices. 
+
+
+They now combine both things such that the output for the reflecticity is a 2x2 reflection matrix. Im not sure exactly what this means tho rn. They assume that the wave function is a spinor, the neclear part is a scalar and is independent of spin, and the magnetix part is depends on the spin orientation relative to B(z) (magnetix induction). So now the previous sclar refractive index is a 2x2 matrix and in a math sense the nuclear part shifts both spin channels eqally so its independent and the magnetic part tilts them wrt B(z). 
