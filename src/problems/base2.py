@@ -84,8 +84,11 @@ class Base2OptimizationProblem:
             R_down_full = reflectivity(self.Q, Ld, Sd, bkg=bkg)
             
             # references (without SOI layer)
-            Lu_ref = [Lu[i] for i in [0,1,2,4]]; Su_ref = [Su[i] for i in [0,1,3]]
-            Ld_ref = [Ld[i] for i in [0,1,2,4]]; Sd_ref = [Sd[i] for i in [0,1,3]]
+            Lu_ref = [Lu[i] for i in [0,1,2,4]]
+            Su_ref = [Su[i] for i in [0,1,3]]
+            Ld_ref = [Ld[i] for i in [0,1,2,4]]
+            Sd_ref = [Sd[i] for i in [0,1,3]]
+            
             R_up_ref = reflectivity(self.Q, Lu_ref, Su_ref, bkg=bkg)
             R_down_ref = reflectivity(self.Q, Ld_ref, Sd_ref, bkg=bkg)
             
