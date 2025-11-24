@@ -22,12 +22,24 @@ class Base1OptimizationProblem:
         d_MRL > 0 
         c \in {Al_2O_3, SiO_2, Au} (for example)
     """ 
-    def __init__(self):
-        pass
-    
+    def __init__(self, materials, soi, q_grid, bounds):
+        """
+        materials: data in a dictionary 
 
+        """
+        pass
     def _layers(self): 
         pass
     def evaulate_objective():
-        pass 
-     
+        pass
+
+@dataclass
+class SOISpec: 
+    """
+    One SOI scenario 
+    a dataclass for this 
+    """
+    name: str                    
+    rho_n: float     
+    thickness: float 
+    sigma: float 
