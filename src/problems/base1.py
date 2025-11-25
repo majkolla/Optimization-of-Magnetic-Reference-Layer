@@ -103,10 +103,18 @@ class Base1OptimizationProblem:
         self.bounds_x = bounds_x
         self.bounds_d = bounds_d
         # Ill think about the implementation of weights for now
-        
 
-        pass
+
+    @property
+    def cap_choices(self) -> list[str]: 
+        pass 
+
+    def validate(self) -> None: 
+        pass 
+
+    def evaluate_objective(self): 
+        pass 
+    # ----------------- stack builder part -------------------
+
     def _layers(self): 
-        pass
-    def evaulate_objective():
-        pass
+        pass 
