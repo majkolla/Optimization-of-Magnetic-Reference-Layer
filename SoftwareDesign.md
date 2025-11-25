@@ -13,7 +13,7 @@ An interface that all problem classes must satisfy.
     - it builds the layer stacks (Si, MRL(x,d), cap, SOI)
     - owns and returns searchspace with x_coti, d_mrl and cap 
 
-- Base2OptProblem 
+    - Base2OptProblem
     -   Basically the same, but with more vars
 
 # The domain
