@@ -2,54 +2,15 @@
 
 
 ## Repo structure 
-
-The structure here is going to be a problem class, where all the functions are defined and TSF etc are defined with all parameters, then ill have a solver class that takes in the problem class and finds the optimum for the parameters.
-
+bla bla bla
 
 
-### Consider the base2 optimzation: 
+## Optimzation problem 
+There may be multiple configurations that returns similar results, thus getting the *best* configurations is about finding a configurations that does more than simply perform well with some metric. We may have errors in construction, we may have stability or robustness problems. 
 
+For problem defintion *base1* we have:
 
-In source: 
-
-base2opt/
-  __init__.py
-  problems/ # problem defintion 
-    __init__.py
-    base2.py
-  physics/  # the physics 
-    __init__.py
-    reflectometry.py 
-  solvers/ # solvers for that problem 
-    __init__.py
-            # not decided the algorthims yet
-
-#### physics 
-In the physics part i'd define the reflecitivty functions, sfm, mcf, tsf, sensitivity etc. All the physics stuff would be define there, and ill try to implement it myself to gain understanding. 
-
-#### Base2 
-Will contains the problem class, bounds, SOI:s constraints etc. 
-
-
-# Goals
-- Thickness of MRL
-- material of capping layer 
-- thickness of capping layer 
-
-*extra*
-- concentration of Co-Ti
-- better materials than Co-Ti
-- reference layer? (for non polizerar thing so we dont need no magnetic stuff)
-
-
-- Figure of merit (derivites, perhaps) 
-
-
-- pipeline
-Researcher plugin SOI get best layer type.
-
-
-
-
-
-what is an analyzer 
+${\rm TSF}(x_{\text{CoTi}},\; d_{\text{MRL}},\; c)\\$
+s.t.
+$\\x_{\text{CoTi}}\in [0,1]$, $d_{\text{MRL}} > 0$, $c\in{\text{Al}_2\text{O}_3,\;
+\text{SiO}_2,\text{Au}}$. 
