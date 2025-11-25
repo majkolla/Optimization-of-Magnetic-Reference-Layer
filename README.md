@@ -2,7 +2,23 @@
 
 
 ## Repo structure 
-bla bla bla
+- **src**
+  - data
+  - physics
+    - fom.py
+    - reflectometry.py
+  - problems 
+    - base1.py
+    - base2.py
+  - solvers 
+    - base.py
+    - callback.py
+    - constraints.py
+    - evaluation.py 
+    - multi_objective.py
+    - robustness.py 
+    - search_space.py
+    - single_obj.py
 
 
 ## Optimzation problem 
@@ -13,4 +29,4 @@ For problem defintion *base1* we have:
 ${\rm TSF}(x_{\text{CoTi}},\; d_{\text{MRL}},\; c)\\$
 s.t.
 $\\x_{\text{CoTi}}\in [0,1]$, $d_{\text{MRL}} > 0$, $c\in{\text{Al}_2\text{O}_3,\;
-\text{SiO}_2,\text{Au}}$. 
+\text{SiO}_2,\text{Au}}$
