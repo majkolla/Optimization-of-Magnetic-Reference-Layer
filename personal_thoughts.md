@@ -23,7 +23,7 @@ These are my personal notes for understanding the material, and not a part of th
 We can describe a netron as a QM wave and work with it's reflections from layered materials. So we're intersted in the reflectivity function: $R(Q) = |r(Q)|^2$ as a function of momentum transfew Q and how it's connected to the SLD profile $\rho(z)$.
 
 
-First represent the neutron as a plane wave: $\Phi(k,r) = e^{ikr}$. 
+First represent the neutron as a plane wave: $\psi(k,r) = e^{ikr}$. 
 - k = (k_x, k_y, k_z)
 - r = (x,y,z)
 - $|\Phi|^2$ is the probability density of finding the neutron at r with momentum p. Howeverm note that a real neutron is a wavepacket, meaning that it's a superposiition of plane waves, but for this problem a single wave approx. is good enough. 
