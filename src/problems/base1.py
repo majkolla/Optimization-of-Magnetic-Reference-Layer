@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 import numpy as np
-from ..physics.reflectometry import reflectivity, spin_sld
-from ..physics.fom import sensitivity, sfm, mcf, tsf
-from typing import Optional, Callable
+from physics.reflectometry import reflectivity, spin_sld
+from physics.fom import sensitivity, sfm, mcf, tsf
+from typing import Optional, Callable, List, Tuple, Dict, Any
 
 
 @dataclass
@@ -28,7 +28,7 @@ class CapSpec:
 @dataclass 
 class SubstrateSpec: 
     """ ALWAYS SI"""
-    name: str = "Si"
+    name: str
     rho_n: float # = check it later 
     sigma: float 
 
@@ -40,7 +40,7 @@ class MRL:
     rho_n_Co: float
     rho_n_Ti: float
 
-    m_sld_from_x = Callable[[float, float, float, float], float]  
+    m_sld_from_x: Callable[[float], float] 
     # either a functions takes a float returns a float  
     # i think Anton said that it's basically scale with amount and 
     # mult with SLD for the mateiral 
@@ -85,32 +85,139 @@ class Base1OptimizationProblem:
         a weight for Q, potentially to optimze for particular Q vals
     
     """ 
-    def __init__(self, 
+    def __init__(
+                self, 
                  materials: Materials, 
                  soi_list: list[SOISpec], 
                  q_grid: np.ndarray, 
                  bounds_x: Bounds, 
                  bounds_d: Bounds, 
-                 weight_fn):
+                 weight_fn: Optional[Callable[[np.ndarray], np.ndarray]] = None,
+):
         
         self.materials = materials 
         self.soi_list = list(soi_list)
         self.Q = np.asarray(q_grid, dtype=float)
         self.bounds_x = bounds_x
         self.bounds_d = bounds_d
-        # Ill think about the implementation of weights for now
-
-
+        self.validate()
+        self.weight_fn = weight_fn
     @property
     def cap_choices(self) -> list[str]: 
         pass 
 
     def validate(self) -> None: 
-        pass 
+        """ 
+        Assert all constraints
+        """
+        assert self.Q.ndim == 1 and np.all(self.Q > 0), "Q must be 1d and positive."
+        assert 0.0 <= self.bounds_x.lo < self.bounds_x.hi <= 1.0, "x bounds must be within [0,1]."
+        assert self.bounds_d.hi > max(0.0, self.bounds_d.lo), "thickness bounds invalid."
+        assert len(self.materials.caps) > 0, "No caps available."
+        assert len(self.soi_list) > 0, "Provide at least one SOI."
+        assert self.materials.mrl.m_sld_from_x is not None, "Provide MRL.m_sld_from_x(x)."
+    
+    
+    def evaluate_objective(self,
+                           x_coti: float,
+                           d_mrl: float, 
+                           cap: str,
+                           objective: str = "TSF", 
+                           return_breakdown: bool = False
+                           ) -> float: 
+        """ Returns TSF val as default """
+        x_coti = float(np.clip(x_coti, self.bounds_x.lo, self.bounds_x.hi))
+        d_mrl = float(np.clip(d_mrl, self.bounds_d.lo, self.bounds_d.hi))
 
-    def evaluate_objective(self): 
-        pass 
+        w = None if self.weight_fn is None else self.weight_fn(self.Q)
+
+        triplets: List[Tuple[float, float, float]] = []  # (SFM_up, SFM_down, MCF)
+        parts: List[Dict[str, Any]] = []                 # optional breakdown
+
+        for soi in self.soi_list:
+            # build stacks without and with SOI (spin-up and spin-down)
+            layers_sub_up, layers_sub_down = self._layers(x_coti, d_mrl, cap, soi=None)
+            layers_full_up, layers_full_down = self._layers(x_coti, d_mrl, cap, soi=soi)
+
+            # reflectivities
+            Rsub_up = self._reflect(self.Q, layers_sub_up)
+            Rsub_dn = self._reflect(self.Q, layers_sub_down)
+            Rfull_up = self._reflect(self.Q, layers_full_up)
+            Rfull_dn = self._reflect(self.Q, layers_full_down)
+
+            # sensitivities S(Q) and FOMs
+            S_up = sensitivity(self.Q, Rsub_up, Rfull_up)
+            S_dn = sensitivity(self.Q, Rsub_dn, Rfull_dn)
+            SFM_up = sfm(self.Q, S_up, w=w)
+            SFM_dn = sfm(self.Q, S_dn, w=w)
+            MCF = mcf(self.Q, S_up, S_dn, w=w)
+
+            triplets.append((SFM_up, SFM_dn, MCF))
+            if return_breakdown:
+                parts.append({
+                    "soi": soi.name,
+                    "SFM_up": float(SFM_up),
+                    "SFM_down": float(SFM_dn),
+                    "MCF": float(MCF)
+                })
+
+        value = float(tsf(triplets)) if objective.upper() == "TSF" else float(tsf(triplets))
+
+        if return_breakdown:
+            return {"value": value, "per_soi": parts}
+        return value
+
     # ----------------- stack builder part -------------------
 
-    def _layers(self): 
-        pass 
+    def _layers(
+        self,
+        x_coti: float,
+        d_mrl: float,
+        cap: str,
+        soi: Optional[SOISpec],
+    ) -> Tuple[List[Dict[str, float]], List[Dict[str, float]]]:
+        """
+        Build spin-up and spin-down layer stacks for reflectivity().
+        Order: ambient (air) -> [SOI?] -> cap -> MRL -> substrate (semi-infinite)
+        Non-magnetic layers: rho_up == rho_down == rho_n.
+        MRL: spin split via rho_m(x).
+        """
+        sub = self.materials.substrate
+        cap_spec = self.materials.caps[cap]
+        mrl = self.materials.mrl
+
+        # alloy mixing for nuclear SLD; magnetic SLD user-supplied
+        rho_n_mrl = x_coti * mrl.rho_n_Co + (1.0 - x_coti) * mrl.rho_n_Ti
+        rho_m_mrl = float(mrl.m_sld_from_x(x_coti))  # user function
+        rho_up_mrl = rho_n_mrl + rho_m_mrl
+        rho_dn_mrl = rho_n_mrl - rho_m_mrl
+
+        # convenience builders
+        def L(rho, thickness, sigma) -> Dict[str, float]:
+            return {"rho": float(rho), "thickness": float(thickness), "sigma": float(sigma)}
+
+        # base stack (top -> bottom), ambient (air) is implicit in most kernels
+        up_stack = []
+        dn_stack = []
+
+        # optional SOI on top of cap
+        if soi is not None:
+            up_stack.append(L(soi.rho_n, soi.thickness, soi.sigma))
+            dn_stack.append(L(soi.rho_n, soi.thickness, soi.sigma))
+
+        # cap layer (non-magnetic)
+        up_stack.append(L(cap_spec.rho_n, cap_spec.thickness, cap_spec.sigma))
+        dn_stack.append(L(cap_spec.rho_n, cap_spec.thickness, cap_spec.sigma))
+
+        # MRL (spin split)
+        up_stack.append(L(rho_up_mrl, d_mrl, mrl.sigma_mrl_cap))
+        dn_stack.append(L(rho_dn_mrl, d_mrl, mrl.sigma_mrl_cap))
+
+        # substrate (semi-infinite: thickness=0 convention)
+        up_stack.append(L(sub.rho_n, 0.0, mrl.sigma_sub_mrl))
+        dn_stack.append(L(sub.rho_n, 0.0, mrl.sigma_sub_mrl))
+
+        return up_stack, dn_stack
+    
+    def _reflect(self, Q: np.ndarray, layers: List[Dict[str, float]]) -> np.ndarray:
+        return reflectivity(Q, layers)
