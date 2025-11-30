@@ -1,27 +1,25 @@
 import numpy as np
 
 def _kz(Q, rho):
-    return np.sqrt((Q**2)/4.0 - 4.0*np.pi*rho + 0j)
+    return np.sqrt((Q**2)/4.0 - 4.0*np.pi*(1e-6)*rho + 0j)
 
 def parratt_amplitude(Q, layers):
-    # k_z in each layer (uses your existing _kz)
     k = [_kz(Q, float(L["rho"])) for L in layers]
 
-    # Start from substrate: r_N-1 = 0
-    Gamma = np.zeros_like(Q, dtype=np.complex128)
-    N = len(layers) - 1  # number of interfaces
+    Gamma = np.zeros_like(Q, dtype=np.complex128)  # start at substrate
+    N = len(layers) - 1
 
-    # Recurse upward across interfaces j = N-1 ... 0
     for j in range(N-1, -1, -1):
         k_i, k_j = k[j], k[j+1]
-
-        # Fresnel coefficient
         rj = (k_i - k_j) / (k_i + k_j)
 
-        # Nevot–Croce roughness factor: take sigma from the *upper* layer j
+        # Stable Nevot–Croce (damping only)
         sigma_j = float(layers[j].get("sigma", 0.0))
-        if sigma_j != 0.0:
-            rj *= np.exp(-2.0 * k_i * k_j * (sigma_j**2))
+        if sigma_j:
+            # exponent = -2 * sigma^2 * Re(k_i * k_j)  (clip to <= 0)
+            expo = -2.0 * (sigma_j**2) * np.real(k_i * k_j)
+            expo = np.minimum(expo, 0.0)
+            rj *= np.exp(expo)
 
         # Phase through the *lower* layer (j+1)
         d_lower = float(layers[j+1].get("thickness", 0.0))
