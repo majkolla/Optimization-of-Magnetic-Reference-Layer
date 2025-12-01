@@ -52,10 +52,35 @@ class Param:
 class ContinuousParam(Param): 
     lo: float
     hi: float 
-
+    ## maybe should implememt soething to check if lo is higher then hi and give error idk 
 
 class IntegerParam(Param): 
-    pass 
+    hi: float 
+    lo: float 
+
+    def pack(self, value):
+        return float(int(value)) # perhaps not the best method to find the optimum, but for now itll do. 
+
+    def unpack(self, scalar: float) -> int: 
+        """ 
+        convert a float representation to a python int
+
+        rounds the nearest int. 
+        
+        REALLY NOT IMPRESSIVE OPTIMZATION METHODS BUT FOR NOW ITLL DO 
+        """
+        return int(round(float(scalar)))
+    
+    def clip(self, scalar):
+        """
+        clamp a scalar to the allowed interval then round to the neareest int
+
+        returns a float 
+        """
+        clamped = float(np.clip(scalar, self.lo, self.hi))
+        rounded = float(np.round(clamped))
+
+        return rounded 
 
 class CategoricalParam(Param): 
     pass 
