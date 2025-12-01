@@ -22,7 +22,7 @@ class SOISpec:
 class CapSpec: 
     name: str 
     rho_n: float # nuclear SLD 
-    thickness: float # fixed in Base 1 
+    thickness: float 
     sigma: float 
 
 @dataclass 
@@ -67,6 +67,7 @@ class Base1OptimizationProblem:
         x_coti \in [0,1]
         d_MRL > 0 
         c \in {Al_2O_3, SiO_2, Au} (for example)
+        d_cap > 0
 
 
     ----------------------------------------------
@@ -92,19 +93,21 @@ class Base1OptimizationProblem:
                  q_grid: np.ndarray, 
                  bounds_x: Bounds, 
                  bounds_d: Bounds, 
+                 bounds_cap: Bounds,
                  weight_fn: Optional[Callable[[np.ndarray], np.ndarray]] = None,
 ):
-        
         self.materials = materials 
         self.soi_list = list(soi_list)
         self.Q = np.asarray(q_grid, dtype=float)
         self.bounds_x = bounds_x
         self.bounds_d = bounds_d
+        self.bounds_cap = bounds_cap
         self.validate()
         self.weight_fn = weight_fn
+
     @property
     def cap_choices(self) -> list[str]: 
-        pass 
+        return list(self.materials.caps.keys())
 
     def validate(self) -> None: 
         """ 
@@ -122,22 +125,29 @@ class Base1OptimizationProblem:
                            x_coti: float,
                            d_mrl: float, 
                            cap: str,
+                           d_cap: float,
                            objective: str = "TSF", 
                            return_breakdown: bool = False
                            ) -> float: 
         """ Returns TSF val as default """
         x_coti = float(np.clip(x_coti, self.bounds_x.lo, self.bounds_x.hi))
         d_mrl = float(np.clip(d_mrl, self.bounds_d.lo, self.bounds_d.hi))
+        d_cap = float(np.clip(d_cap, self.bounds_cap.lo, self.bounds_cap.hi))
 
+
+        #in case cap dont exist: 
+        if cap not in self.materials.cap: 
+            raise ValueError(f"unknown cap mateiral")
+        
         w = None if self.weight_fn is None else self.weight_fn(self.Q)
 
         triplets: List[Tuple[float, float, float]] = []  # (SFM_up, SFM_down, MCF)
         parts: List[Dict[str, Any]] = []                 # optional breakdown
 
         for soi in self.soi_list:
-            # build stacks without and with SOI (spin-up and spin-down)
-            layers_sub_up, layers_sub_down = self._layers(x_coti, d_mrl, cap, soi=None)
-            layers_full_up, layers_full_down = self._layers(x_coti, d_mrl, cap, soi=soi)
+            # build stacks without and with SOI (spin up and down)
+            layers_sub_up, layers_sub_down = self._layers(x_coti, d_mrl, d_cap, cap, soi=None)
+            layers_full_up, layers_full_down = self._layers(x_coti, d_mrl, d_cap, cap, soi=soi)
 
             # reflectivities
             Rsub_up = self._reflect(self.Q, layers_sub_up)
@@ -173,12 +183,13 @@ class Base1OptimizationProblem:
         self,
         x_coti: float,
         d_mrl: float,
+        d_cap: float, 
         cap: str,
         soi: Optional[SOISpec],
     ) -> Tuple[List[Dict[str, float]], List[Dict[str, float]]]:
         """
-        Build spin-up and spin-down layer stacks for reflectivity().
-        Order: ambient (air) -> [SOI?] -> cap -> MRL -> substrate (semi-infinite)
+        Build spin up and down layer stacks for reflectivity().
+        Order: ambient (air) -> [SOI] -> cap -> MRL -> substrate (semi-infinite)
         Non-magnetic layers: rho_up == rho_down == rho_n.
         MRL: spin split via rho_m(x).
         """
@@ -205,9 +216,9 @@ class Base1OptimizationProblem:
             up_stack.append(L(soi.rho_n, soi.thickness, soi.sigma))
             dn_stack.append(L(soi.rho_n, soi.thickness, soi.sigma))
 
-        # cap layer (non-magnetic)
-        up_stack.append(L(cap_spec.rho_n, cap_spec.thickness, cap_spec.sigma))
-        dn_stack.append(L(cap_spec.rho_n, cap_spec.thickness, cap_spec.sigma))
+        # cap layer (not magnetic)
+        up_stack.append(L(cap_spec.rho_n, d_cap, cap_spec.sigma))
+        dn_stack.append(L(cap_spec.rho_n, d_cap, cap_spec.sigma))
 
         # MRL (spin split)
         up_stack.append(L(rho_up_mrl, d_mrl, mrl.sigma_mrl_cap))
