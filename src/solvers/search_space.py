@@ -54,6 +54,19 @@ class ContinuousParam(Param):
     hi: float 
     ## maybe should implememt soething to check if lo is higher then hi and give error idk 
 
+    def pack(self, value: Any):
+        return float(value)
+      
+    def unpack(self, scalar: float) -> float:
+        return float(scalar)
+    
+
+    def clip(self, scalar):
+        return float(np.clip(scalar, self.lo, self.hi))
+
+    def sample(self, n = 1):
+        return super().sample(n)
+    
 class IntegerParam(Param): 
     hi: float 
     lo: float 
@@ -81,20 +94,42 @@ class IntegerParam(Param):
         rounded = float(np.round(clamped))
 
         return rounded 
+    
+    def sample(self, n: int = 1) -> np.ndarray:
+        raise NotImplementedError
+    
 
-class CategoricalParam(Param): 
-    pass 
 
+class CategoricalParam(Param): ...
+"""Categorical parameter with a set of discrete choices repr as strings"""
+
+@dataclass
 class SearchSpace: 
     """
-    Holds the param and can pack and unpack helpers 
+    Search space is composed of an ordered list of parameters, where 
+    each parameters is a sclar in the opt vector 
+
+    params: list[param]
     """
-    def __init__(self):
-        pass
+
+    def __init__(self, params: Sequence[Param]):
+        self._name_to_index: Dict[str, int] = {}
+        for idx, p in enumerate(self.params): 
+            self._name_to_index[p.name] = idx 
+
+    def __len__(self) -> int: 
+        """ The dimension of the search space """
+        return len(self.params)
+
+    @property
+    def names(self) -> List[str]: 
+        """Return the lst of param names"""
+        return [p.name for p in self.params]
+    
     def pack(self): 
-        pass 
+        raise NotImplementedError
     def unpack(self): 
-        pass 
+        raise NotImplementedError
     def clip(self): 
-        pass 
+        raise NotImplementedError
     
