@@ -67,6 +67,8 @@ class ContinuousParam(Param):
     def sample(self, n = 1):
         return super().sample(n)
     
+
+
 class IntegerParam(Param): 
     hi: float 
     lo: float 
@@ -147,10 +149,67 @@ class SearchSpace:
         """Return the lst of param names"""
         return [p.name for p in self.params]
     
-    def pack(self): 
-        raise NotImplementedError
-    def unpack(self): 
-        raise NotImplementedError
-    def clip(self): 
-        raise NotImplementedError
+    def pack(self, values: Mapping[str, Any]) -> np.ndarray: 
+        """
+        Pack a mapping of a param val into a vector 
+        parameters are like dict
+
+        and then return a vector with numerical values we can optimze
+        """
+        theta = np.empty(len(self.params), dtype=float)
+        for i, p in enumerate(self.params): 
+            theta[i] = p.pack(values[p.name])
+        return theta
+
+    def unpack(self, theta: np.ndarray) -> Dict[str, Any]:
+        """
+        unpack a numeric vector into a dict
+
+        theta np.ndarray 
+            1D array with all the parameter in float form kinda 
+
+        returns a Dict[str, Any]
+            so we map from parameters name to the unpacked thing
+        """
+        arr = np.asarray(theta, dtype=float)
+        result: Dict[str, Any] = {}
+
+        for i, p in enumerate(self.params): 
+            result[p.name] = p.unpack(arr[i])
+        return result
     
+    def clip(self, theta: np.ndarray) -> np.ndarray: 
+        """
+        clip a numeric vector to a feasible domain of the seachspace 
+
+        we get the parameter 
+        tehta as an array 1D
+        and return a new array with each parameter clipped using it's 
+        own clip method 
+        """
+        arr = np.asarray(theta)
+        clipped = np.empty_like(arr)
+        for i, p in enumerate(self.params): 
+            clipped[i] = p.clip(arr[i])
+        return clipped
+    
+    def sample(self, n: int) -> np.ndarray: 
+        """
+        Draw random feasible samples from the search space 
+
+        parameters: n amount of samples to draw  
+        
+        return: 
+        a 2D arr where row i is a sample vector 
+        """
+        num_params = len(self.params)
+        samples = np.empty((n, num_params), dtype=float)
+        for i, p in enumerate(self.params): 
+            samples[:, i] = p.sample(n)
+        return samples 
+    
+
+
+if __name__ == "__main__": 
+    ## implement some testing stuff 
+    pass 
