@@ -100,8 +100,29 @@ class IntegerParam(Param):
     
 
 
-class CategoricalParam(Param): ...
-"""Categorical parameter with a set of discrete choices repr as strings"""
+class CategoricalParam(Param): 
+    """
+    Categorical parameter with a set of discrete choices repr as strings
+    """
+    choices: Sequence[Any]
+
+    def pack(self, value: Any) -> float: 
+        idx = self.choice.index(value)
+        return float(idx)
+    
+    def unpack(self, scalar: float) -> Any: 
+        idx = int(np.clip(round(float(scalar)), 0, len(self.choices) - 1))
+        return self.choices[idx]
+    
+    def clip(self, scalar: float) -> float:
+        idx = int(np.clip(round(float(scalar)), 0, len(self.choices) - 1))
+        return float(idx)
+    
+    def sample(self, n: int = 1) -> np.ndarray: 
+        k = len(self.choices)
+        return np.random.randint(0, k, size=n).astype(float)
+    
+
 
 @dataclass
 class SearchSpace: 
