@@ -1,0 +1,18 @@
+{
+  "substrate": {
+    "name": "Si",
+    "rho_n": 2.07,
+    "sigma": 3.0
+  },
+  "caps": {
+    "Al2O3": { "rho_n": 5.7,  "thickness": 16.0, "sigma": 8.0 },
+    "SiO2":  { "rho_n": 3.47, "thickness": 16.0, "sigma": 8.0 },
+    "Au":    { "rho_n": 4.5,  "thickness": 16.0, "sigma": 8.0 }
+  },
+  "mrl": {
+    "rho_n_Co": 2.265,
+    "rho_n_Ti": -1.95,
+    "sigma_sub_mrl": 5.0,
+    "sigma_mrl_cap": 5.0
+  }
+}
