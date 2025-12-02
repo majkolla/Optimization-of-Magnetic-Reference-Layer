@@ -136,6 +136,7 @@ class SearchSpace:
     """
 
     def __init__(self, params: Sequence[Param]):
+        self.params: List[Param] = list(params)
         self._name_to_index: Dict[str, int] = {}
         for idx, p in enumerate(self.params): 
             self._name_to_index[p.name] = idx 
