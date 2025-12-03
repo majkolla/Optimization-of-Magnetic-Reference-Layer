@@ -3,6 +3,8 @@ import numpy as np
 from physics.reflectometry import reflectivity, spin_sld
 from physics.fom import sensitivity, sfm, mcf, tsf
 from typing import Optional, Callable, List, Tuple, Dict, Any
+from solvers.search_space import SearchSpace, ContinuousParam, CategoricalParam, IntegerParam
+
 
 
 @dataclass
@@ -95,7 +97,8 @@ class Base1OptimizationProblem:
                  bounds_d: Bounds, 
                  bounds_cap: Bounds,
                  weight_fn: Optional[Callable[[np.ndarray], np.ndarray]] = None,
-):
+                ):
+        
         self.materials = materials 
         self.soi_list = list(soi_list)
         self.Q = np.asarray(q_grid, dtype=float)
@@ -109,6 +112,24 @@ class Base1OptimizationProblem:
     def cap_choices(self) -> list[str]: 
         return list(self.materials.caps.keys())
 
+    @property
+    def search_space(self) -> SearchSpace:
+        """
+        Search space for Base1:
+
+        - x_coti \in [bounds_x.lo, bounds_x.hi]
+        - d_mrl \in [bounds_d.lo, bounds_d.hi]
+        - cap \in available cap names (e.g. ["Al2O3", "SiO2", "Au"])
+        """
+
+        return SearchSpace(
+            [
+                ContinuousParam("x_coti", self.bounds_x.lo, self.bounds_x.hi),
+                ContinuousParam("d_mrl", self.bounds_d.lo, self.bounds_d.hi),
+                CategoricalParam("cap", self.cap_choices),
+            ]
+            )
+    
     def validate(self) -> None: 
         """ 
         Assert all constraints
