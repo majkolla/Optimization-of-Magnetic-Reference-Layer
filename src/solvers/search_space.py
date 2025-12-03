@@ -101,7 +101,7 @@ class IntegerParam(Param):
         raise NotImplementedError
     
 
-
+@dataclass
 class CategoricalParam(Param): 
     """
     Categorical parameter with a set of discrete choices repr as strings
@@ -109,7 +109,7 @@ class CategoricalParam(Param):
     choices: Sequence[Any]
 
     def pack(self, value: Any) -> float: 
-        idx = self.choice.index(value)
+        idx = self.choices.index(value)
         return float(idx)
     
     def unpack(self, scalar: float) -> Any: 
@@ -213,4 +213,14 @@ class SearchSpace:
 
 if __name__ == "__main__": 
     ## implement some testing stuff 
-    pass 
+    space = SearchSpace(
+        [
+            ContinuousParam("x_coti", lo=0.0, hi=1.0),
+            ContinuousParam("d_mrl", lo=20.0, hi=300.0),
+            CategoricalParam("cap", choices=["Al2O3", "SiO2", "Au"]),
+        ]
+    )
+
+    values = {"x_coti": 0.73, "d_mrl": 100.0, "cap": "Al2O3"}
+    theta = space.pack(values)
+    print(theta)
