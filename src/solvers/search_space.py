@@ -9,6 +9,10 @@ General parameter and just search space abstractions used by ther opt framework
 
 Each parameter is a "scalar" in the opt. vector. And the search space holds the list of the parameters 
 and it provides helping functions to unpack and pack the vals to their numeric vector repr. used by the solver. 
+
+
+NOTE: The clip functions works as a strong correction thing for when solver finds solutions outside the bounds 
+This is a first implementation and it's NOT a sound way of doing it. 
 """
 
 import numpy as np 
@@ -211,8 +215,9 @@ class SearchSpace:
     
 
 
+
 if __name__ == "__main__": 
-    ## implement some testing stuff 
+    ## implement some testing stuff
     space = SearchSpace(
         [
             ContinuousParam("x_coti", lo=0.0, hi=1.0),
@@ -224,4 +229,3 @@ if __name__ == "__main__":
     values = {"x_coti": 0.73, "d_mrl": 100.0, "cap": "Al2O3"}
     theta = space.pack(values)
     print(theta)
-    
