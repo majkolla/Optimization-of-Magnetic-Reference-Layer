@@ -66,7 +66,8 @@ class Base1OptimizationProblem:
 
     TSF(x)
         s.t.
-        x_coti \in [0,1]
+        # x_coti \in [0,1]
+        
         d_MRL > 0 
         c \in {Al_2O_3, SiO_2, Au} (for example)
         d_cap > 0

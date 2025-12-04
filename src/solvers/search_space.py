@@ -13,6 +13,13 @@ and it provides helping functions to unpack and pack the vals to their numeric v
 
 NOTE: The clip functions works as a strong correction thing for when solver finds solutions outside the bounds 
 This is a first implementation and it's NOT a sound way of doing it. 
+
+
+SOI 
+MRL 
+CAP -
+
+
 """
 
 import numpy as np 
@@ -77,7 +84,7 @@ class IntegerParam(Param):
     hi: float 
     lo: float 
 
-    def pack(self, value):
+    def pack(self, value) -> float:
         return float(int(value)) # perhaps not the best method to find the optimum, but for now itll do. 
 
     def unpack(self, scalar: float) -> int: 

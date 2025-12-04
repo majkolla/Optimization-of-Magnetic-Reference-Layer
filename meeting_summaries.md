@@ -20,4 +20,10 @@
 
 
 - Figure of merit 
- 
+
+# Meeting 2 
+- Get the exact numbers from Anton 
+- test and see if we get same plots 
+- implement very simple rough draft of a solver 
+    - see if we can get .73 
+- run it on parameters of itnerest 
