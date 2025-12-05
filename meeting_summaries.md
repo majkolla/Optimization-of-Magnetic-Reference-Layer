@@ -7,7 +7,6 @@
 - Stable capping layer
 
 
-
 ### Goals simplified 
 - Thickness of MRL
 - material of capping layer 

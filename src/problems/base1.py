@@ -19,7 +19,6 @@ class SOISpec:
     thickness: float 
     sigma: float 
 
-
 @dataclass
 class CapSpec: 
     name: str 
