@@ -57,7 +57,7 @@ class Param:
         raise NotImplementedError
 
     def sample(self, n: int = 1) -> np.ndarray: 
-        raise NotImplementedError
+        return np.random.uniform(self.lo, self.hi, size=n)
 
 @dataclass
 class ContinuousParam(Param): 

@@ -23,7 +23,6 @@ class SOISpec:
 class CapSpec: 
     name: str 
     rho_n: float # nuclear SLD 
-    thickness: float 
     sigma: float 
 
 @dataclass 
@@ -126,6 +125,7 @@ class Base1OptimizationProblem:
             [
                 ContinuousParam("x_coti", self.bounds_x.lo, self.bounds_x.hi),
                 ContinuousParam("d_mrl", self.bounds_d.lo, self.bounds_d.hi),
+                ContinuousParam("d_cap", self.bounds_cap.lo, self.bounds_cap.hi),
                 CategoricalParam("cap", self.cap_choices),
             ]
             )
@@ -145,19 +145,15 @@ class Base1OptimizationProblem:
     def evaluate_objective(self,
                            x_coti: float,
                            d_mrl: float, 
-                           cap: str,
                            d_cap: float,
+                           cap: str,
                            objective: str = "TSF", 
                            return_breakdown: bool = False
                            ) -> float: 
         """ Returns TSF val as default """
-        x_coti = float(np.clip(x_coti, self.bounds_x.lo, self.bounds_x.hi))
-        d_mrl = float(np.clip(d_mrl, self.bounds_d.lo, self.bounds_d.hi))
-        d_cap = float(np.clip(d_cap, self.bounds_cap.lo, self.bounds_cap.hi))
-
 
         #in case cap dont exist: 
-        if cap not in self.materials.cap: 
+        if cap not in self.materials.caps: 
             raise ValueError(f"unknown cap mateiral")
         
         w = None if self.weight_fn is None else self.weight_fn(self.Q)
