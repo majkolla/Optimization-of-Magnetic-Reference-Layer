@@ -22,6 +22,7 @@ class SOISpec:
 @dataclass
 class CapSpec: 
     name: str 
+    nom_thickness: float # NOT ACTUALLY USED IN THE PROBLEM ONLY FOR PLOTITNG 
     rho_n: float # nuclear SLD 
     sigma: float 
 
