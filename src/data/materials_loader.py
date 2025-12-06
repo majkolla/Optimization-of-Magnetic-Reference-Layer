@@ -36,7 +36,7 @@ def load_base1_materials(
         caps_dict[name] = CapSpec(
             name=name,
             rho_n=float(cap["rho_n"]),
-            thickness=float(cap["thickness"]),
+            nom_thickness=float(cap["thickness"]),
             sigma=float(cap["sigma"]),
         )
 
