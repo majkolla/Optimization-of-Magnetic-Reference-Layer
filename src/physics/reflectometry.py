@@ -16,12 +16,10 @@ def parratt_amplitude(Q, layers):
         # Stable Nevot–Croce (damping only)
         sigma_j = float(layers[j].get("sigma", 0.0))
         if sigma_j:
-            # exponent = -2 * sigma^2 * Re(k_i * k_j)  (clip to <= 0)
             expo = -2.0 * (sigma_j**2) * np.real(k_i * k_j)
             expo = np.minimum(expo, 0.0)
             rj *= np.exp(expo)
 
-        # Phase through the *lower* layer (j+1)
         d_lower = float(layers[j+1].get("thickness", 0.0))
         phase = np.exp(2j * k_j * d_lower)
 
