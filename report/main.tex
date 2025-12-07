@@ -330,6 +330,61 @@ This part is also agnostic towrads the search spaces and solvers, it simply comp
 This is the layer between the actual parameters, and what the optimizer works with. 
 
 \subsection*{Layer 5 Solver}
+\begin{description}
 
+  \item[\texttt{solvers/base.py}, \texttt{solvers/single\_obj.py}]
+  \begin{description}
+    \item[\texttt{Solver} interface (from \texttt{CD.md}):]
+      \begin{itemize}
+        \item \texttt{run(budget\_evals, time\_limit\_s, callbacks, stopping) → RunResult}
+        \item \texttt{ask(n) → List[Dict]} \textit{(or vectors, depending on implementation)}
+        \item \texttt{tell(X, Y)}
+        \item \texttt{best() → (Dict, float)}
+        \item \texttt{reset()}
+      \end{itemize}
+
+    \item[Concrete solvers:]
+      \begin{itemize}
+        \item \texttt{RandomSearchSolver}
+        \item \texttt{GridSearchSolver}
+        \item (future) CMA, Bayesian, etc.
+      \end{itemize}
+  \end{description}
+
+  \item[Single-objective behavior:]
+  The solver iteratively:
+  \begin{enumerate}
+    \item proposes candidates via \texttt{ask()},
+    \item evaluates them using the objective,
+    \item reports results with \texttt{tell()},
+    \item tracks best design via \texttt{best()}.
+  \end{enumerate}
+\end{description}   
+
+
+
+\subsection*{Layer 6 UI}
+\begin{description}
+
+  \item[\texttt{B1.ipynb}, possibly \texttt{B2.ipynb}]
+  \begin{description}
+    \item[In these notebooks you:]
+      \begin{itemize}
+        \item Choose the magnetization model via \texttt{m\_sld\_from\_x}.
+        \item Call \texttt{load\_base1\_materials}.
+        \item Build the search space and instantiate \texttt{Base1OptimizationProblem}.
+        \item Pick a solver and run it.
+        \item Plot:
+          \begin{itemize}
+            \item TSF vs iteration,
+            \item reflectivity curves for best design,
+            \item sensitivity curves, etc.
+          \end{itemize}
+      \end{itemize}
+  \end{description}
+
+This layer is the interface where one can inspect results, tune parameters, and visualize performance. It is the interactive workflow layer.
+
+\end{description}
 
 \end{document}
