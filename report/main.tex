@@ -188,17 +188,20 @@ A basic definition could be:
 \[
 J_{performance}[x(z)] = \int_{Q_{min}}^{Q_{max}} C(Q;x(z))w(Q)dQ
 \]
-where $w(Q)$ is simply a weight function to prioritize some Q values, the relevance of this depends on the physics and perhaps this SOI. Currently I'm not sure about how useful this part is. 
+where $w(Q)$ is simply a weight function to prioritize some Q values, the relevance of this depends on the physics and perhaps this SOI. Currently I'm not sure about how useful this part is. er kan man bara ta vem som helst 
 
 We can also define the \emph{simplest choice} where we just have $C(Q; x(z)) = |R_{\uparrow}(Q) - R_{\downarrow}(Q)|$. This is also of course a non linear optimization problem and defining a Lagrangian to optimize instead may be useful given the structure. Observe the current structure: 
 
 \[
 \mathcal{F}[x(z)] = J_{performance} - \lambda_s \int_0 ^L x'(z)^2dz - \lambda_c \int_0 ^LV(x(z))dz - \lambda_r \int_{Q_{min}}^{Q_{max}}D(R(Q;x(z), Q)dQ, \ \lambda_i > 0 
 \]
+
 Where, we can define a reflectivity distortion function. There are many ways to define this functional, and depending on what exactly is relevant we may want to change it. 
 
 
-\section*{}
+\section*{Software design}
+The user defines the optimization problem, with the stack. 
+
 
 
 
