@@ -2,6 +2,8 @@
 \usepackage{graphicx} % Required for inserting images
 \usepackage{amsmath}
 \usepackage{hyperref}
+\usepackage[edges]{forest}
+
 \title{Optimization of Magnetic Reference Layer Design in Polarized Neutron Reflectometry}
 \author{Michael Birtman}
 \date{October 2025}
@@ -200,9 +202,134 @@ Where, we can define a reflectivity distortion function. There are many ways to 
 
 
 \section*{Software design}
-The user defines the optimization problem, with the stack. 
+The design of the package can be viewed as a product of six layers. This is to modularize as much as possible, thus keeping the main parts independent of each other. 
 
+\subsection*{Layer 0}
+\begin{description}
+  \item[Layer 0 -- Data \& Configs]
+    \begin{description}
+      \item[data/base1\_materials.json]
+        Holds parameters:
+        \begin{itemize}
+          \item \texttt{substrate.rho\_n}, \texttt{substrate.sigma}
+          \item \texttt{caps[name].rho\_n}, \texttt{caps[name].thickness}, \texttt{caps[name].sigma}
+          \item \texttt{mrl.rho\_n\_Co}, \texttt{mrl.rho\_n\_Ti}, default roughness
+        \end{itemize}
 
+      \item[materials\_loader.py]
+        \texttt{load\_base1\_materials(filename, m\_sld\_from\_x)}  
+        returns a \texttt{Materials} dataclass:
+        \begin{itemize}
+          \item \texttt{substrate: SubstrateSpec}
+          \item \texttt{caps: Dict[str, CapSpec]}
+          \item \texttt{mrl: MRL} (with \texttt{m\_sld\_from\_x} injected)
+        \end{itemize}
+    \end{description}
+\end{description}
+
+The point is to store all the data in a json file, instead of having it hardcoded anywhere. 
+
+\subsection*{Layer 1}
+\begin{description}
+  \item[\texttt{physics/reflectometry.py}]
+  \begin{description}
+    \item[\texttt{\_kz(Q, rho)}] computes complex \( k_z \) in a layer.
+    \item[\texttt{parratt\_amplitude(Q, layers, sigmas)}] returns complex reflection amplitude \( \Gamma(Q) \).
+    \item[\texttt{reflectivity(Q, layers, sigmas, bkg=0.0)}] returns \( |\Gamma|^2 \) plus background.
+    \item[\texttt{spin\_sld(rho\_n, rho\_m, spin)}] returns \( \rho_n \pm \rho_m \) depending on spin.
+    \end{description}
+\end{description}
+
+This is supposed to be a pure physics engine, meaning that it does not care or now about the optimization, the FoM or the problems. It simply compute $R(Q)$. 
+
+\subsection*{Layer 2 Figure of Merit}
+\begin{description}
+
+  \item[\texttt{physics/fom.py}]
+  \begin{description}
+    \item[\texttt{sensitivity(Q, R\_sub, R\_full)}]
+      \( S(Q) = \frac{R_{\text{sub}} - R_{\text{full}}}{R_{\text{sub}} + R_{\text{full}} + \varepsilon} \).
+
+    \item[\texttt{sfm(Q, S)}]
+      \( \int |S(Q)| \, \mathrm{d}Q \) for one spin channel.
+
+    \item[\texttt{mcf(Q, S\_up, S\_down)}]
+      \( \int |S_{\text{up}}(Q) - S_{\text{down}}(Q)| \, \mathrm{d}Q \).
+
+    \item[\texttt{tsf(foms\_over\_types)}]
+      Sum over \( \text{SFM}^{\uparrow} + \text{SFM}^{\downarrow} + \text{MCF}_{\text{diff}} \) for all SOI types.
+  \end{description}
+\end{description}
+
+This part is also agnostic towrads the search spaces and solvers, it simply computes the FoM. Therefore, reseraching and testing new FoM will be simple. 
+
+\subsection*{Layer 3}
+\begin{description}
+
+  \item[\texttt{problems/base1.py}]
+  \begin{description}
+    \item[Dataclasses:]
+      \begin{itemize}
+        \item \texttt{SubstrateSpec}, 
+        \item  \texttt{CapSpec}, 
+        \item \texttt{MRL}, 
+        \item \texttt{Materials}
+        \item \texttt{SOISpec} 
+      \end{itemize}
+
+    \item[\texttt{Base1OptimizationProblem}]
+      Implements \texttt{OptimizationProblemProtocol}.
+      \begin{itemize}
+        \item \texttt{search\_space: SearchSpace}
+        \item \texttt{evaluate\_objective(x\_dict) → float (TSF)}
+      \end{itemize}
+
+      \textbf{Responsibilities:}
+      \begin{itemize}
+        \item Builds layer stacks for each SOI and spin using \texttt{Materials} + \texttt{spin\_sld}.
+        \item Runs \texttt{reflectivity} for up/down and sub/full.
+        \item Computes sensitivities and FOMs via \texttt{fom.sensitivity / sfm / mcf / tsf}.
+      \end{itemize}
+  \end{description}
+
+  \item[Role in the architecture:]
+  This layer forms the bridge from raw physics details to a single optimization target.
+
+  \begin{itemize}
+    \item Understands what a design vector is (\( x_{\text{coti}}, d_{\text{mrl}}, \text{cap} \)).
+    \item Knows how to evaluate “how good” that design is (via TSF).
+  \end{itemize}
+\end{description}
+
+\subsection*{Layer 4 Search Space abstraction}
+\begin{description}
+
+  \item[\texttt{solvers/search\_space.py}]
+  \begin{description}
+    \item[\texttt{Param} (abstract)]
+      Defines the interface: \texttt{pack}, \texttt{unpack}, \texttt{clip}, \texttt{sample}.
+
+    \item[Concrete params:]
+      \begin{itemize}
+        \item \texttt{ContinuousParam}
+        \item \texttt{IntegerParam}
+        \item \texttt{CategoricalParam}
+      \end{itemize}
+
+    \item[\texttt{SearchSpace}]
+      \begin{itemize}
+        \item \texttt{params: List[Param]}
+        \item \texttt{pack(x\_dict) return np.ndarray}
+        \item \texttt{unpack(vector) return dict}
+        \item \texttt{clip(vector) return np.ndarray}
+        \item \texttt{sample(n) return np.ndarray} \textit{(once implemented)}
+      \end{itemize}
+  \end{description}
+\end{description}
+
+This is the layer between the actual parameters, and what the optimizer works with. 
+
+\subsection*{Layer 5 Solver}
 
 
 \end{document}
