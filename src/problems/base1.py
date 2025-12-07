@@ -113,6 +113,10 @@ class Base1OptimizationProblem:
         return list(self.materials.caps.keys())
 
     @property
+    def name(self) -> str:
+        return "Base1"
+    
+    @property
     def search_space(self) -> SearchSpace:
         """
         Search space for Base1:
