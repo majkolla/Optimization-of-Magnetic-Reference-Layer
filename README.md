@@ -30,3 +30,9 @@ ${\rm TSF}(x_{\text{CoTi}},\; d_{\text{MRL}},\; c)\\$
 s.t.
 $\\x_{\text{CoTi}}\in [0,1]$, $d_{\text{MRL}} > 0$, $c\in{\text{Al}_2\text{O}_3,\;
 \text{SiO}_2,\text{Au}}$
+
+## Finihsed product
+problem = Base1OptimizationProblem(...)
+solver = Alg1Solver(problem)
+result = solver.run(evals=500)
+
