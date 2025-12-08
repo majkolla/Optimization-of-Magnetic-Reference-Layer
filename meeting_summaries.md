@@ -35,4 +35,7 @@ MAKE SURE ALL THOSE WORK
 
 - Compare reflectivity genx vs mine 
 - Compare senstiviet genx vs mine 
-- check paper stats and compare 
+- check paper stats and compare
+
+
+THE COTI GRAPH IS WRONG! I NEED TO SOLVE IT SO WE CAN SEE THE OPTIMUM FOR THE RATIO OF COTI 
