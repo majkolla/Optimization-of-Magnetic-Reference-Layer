@@ -27,7 +27,7 @@ def parratt_amplitude(Q, layers):
 
     return Gamma
 
-def reflectivity(Q, layers, bkg=0.0):
+def reflectivity(Q, layers, bkg=10**(-3)):
     return np.abs(parratt_amplitude(Q, layers))**2 + float(bkg)
 
 def spin_sld(rho_n, rho_m, spin='up'):

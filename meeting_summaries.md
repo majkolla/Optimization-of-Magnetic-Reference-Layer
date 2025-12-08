@@ -25,4 +25,14 @@
 - test and see if we get same plots 
 - implement very simple rough draft of a solver 
     - see if we can get .73 
-- run it on parameters of itnerest 
+- run it on parameters of itnerest
+
+
+
+# Meeting 3
+
+MAKE SURE ALL THOSE WORK
+
+- Compare reflectivity genx vs mine 
+- Compare senstiviet genx vs mine 
+- check paper stats and compare 
