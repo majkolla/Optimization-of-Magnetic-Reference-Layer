@@ -199,46 +199,98 @@ class Base1OptimizationProblem:
             return {"value": value, "per_soi": parts}
         return value
 
+    def analyze_single_soi(
+        self,
+        soi: SOISpec,
+        x_coti: float,
+        d_mrl: float,
+        d_cap: float,
+        cap: str,
+        bkg: float = 0.0,
+    ) -> Dict[str, Any]:
+        if cap not in self.materials.caps:
+            raise ValueError(f"unknown cap material {cap!r}")
+
+        Q = self.Q
+        w = None if self.weight_fn is None else self.weight_fn(Q)
+
+        # substrate-only (no SOI)
+        layers_sub_up, layers_sub_dn = self._layers(
+            x_coti=x_coti, d_mrl=d_mrl, d_cap=d_cap, cap=cap, soi=None
+        )
+        # full (with SOI)
+        layers_full_up, layers_full_dn = self._layers(
+            x_coti=x_coti, d_mrl=d_mrl, d_cap=d_cap, cap=cap, soi=soi
+        )
+
+        Rsub_up  = self._reflect(Q, layers_sub_up,  bkg=bkg)
+        Rsub_dn  = self._reflect(Q, layers_sub_dn,  bkg=bkg)
+        Rfull_up = self._reflect(Q, layers_full_up, bkg=bkg)
+        Rfull_dn = self._reflect(Q, layers_full_dn, bkg=bkg)
+
+        S_up = sensitivity(Q, Rsub_up, Rfull_up)
+        S_dn = sensitivity(Q, Rsub_dn, Rfull_dn)
+
+        SFM_up = sfm(Q, S_up, w=w)
+        SFM_dn = sfm(Q, S_dn, w=w)
+        MCF    = mcf(Q, S_up, S_dn, w=w)
+
+        return {
+            "Q": Q,
+            "Rsub_up":  Rsub_up,
+            "Rsub_dn":  Rsub_dn,
+            "Rfull_up": Rfull_up,
+            "Rfull_dn": Rfull_dn,
+            "S_up":     S_up,
+            "S_dn":     S_dn,
+            "SFM_up":   float(SFM_up),
+            "SFM_dn":   float(SFM_dn),
+            "MCF":      float(MCF),
+        }
+
     # ----------------- stack builder part -------------------
 
     def _layers(
         self,
         x_coti: float,
         d_mrl: float,
-        d_cap: float, 
+        d_cap: float,
         cap: str,
         soi: Optional[SOISpec],
     ) -> Tuple[List[Dict[str, float]], List[Dict[str, float]]]:
         """
-        Build spin up and down layer stacks for reflectivity().
-        Order: ambient (air) -> [SOI] -> cap -> MRL -> substrate (semi-infinite)
-        Non-magnetic layers: rho_up == rho_down == rho_n.
-        MRL: spin split via rho_m(x).
+        Build spin up and down stacks.
+
+        We store layer dicts as:
+            {'rho', 'thickness', 'sigma'}
+        which is exactly what physics.reflectometry expects.
         """
         sub = self.materials.substrate
         cap_spec = self.materials.caps[cap]
         mrl = self.materials.mrl
 
-        # alloy mixing for nuclear SLD; magnetic SLD user-supplied
+        # nuclear SLD of alloy; magnetic SLD from user function
         rho_n_mrl = x_coti * mrl.rho_n_Co + (1.0 - x_coti) * mrl.rho_n_Ti
-        rho_m_mrl = float(mrl.m_sld_from_x(x_coti))  # user function
+        rho_m_mrl = float(mrl.m_sld_from_x(x_coti))
         rho_up_mrl = rho_n_mrl + rho_m_mrl
         rho_dn_mrl = rho_n_mrl - rho_m_mrl
 
-        # convenience builders
         def L(rho, thickness, sigma) -> Dict[str, float]:
-            return {"rho": float(rho), "thickness": float(thickness), "sigma": float(sigma)}
+            return {
+                "rho": float(rho),
+                "thickness": float(thickness),
+                "sigma": float(sigma),
+            }
 
-        # base stack (top -> bottom), ambient (air) is implicit in most kernels
-        up_stack = []
-        dn_stack = []
+        up_stack: List[Dict[str, float]] = []
+        dn_stack: List[Dict[str, float]] = []
 
-        # optional SOI on top of cap
+        # optional SOI on top
         if soi is not None:
             up_stack.append(L(soi.rho_n, soi.thickness, soi.sigma))
             dn_stack.append(L(soi.rho_n, soi.thickness, soi.sigma))
 
-        # cap layer (not magnetic)
+        # cap (non-magnetic)
         up_stack.append(L(cap_spec.rho_n, d_cap, cap_spec.sigma))
         dn_stack.append(L(cap_spec.rho_n, d_cap, cap_spec.sigma))
 
@@ -246,11 +298,19 @@ class Base1OptimizationProblem:
         up_stack.append(L(rho_up_mrl, d_mrl, mrl.sigma_mrl_cap))
         dn_stack.append(L(rho_dn_mrl, d_mrl, mrl.sigma_mrl_cap))
 
-        # substrate (semi-infinite: thickness=0 convention)
+        # substrate (semi-infinite: thickness=0)
         up_stack.append(L(sub.rho_n, 0.0, mrl.sigma_sub_mrl))
         dn_stack.append(L(sub.rho_n, 0.0, mrl.sigma_sub_mrl))
 
         return up_stack, dn_stack
+
+        
     
-    def _reflect(self, Q: np.ndarray, layers: List[Dict[str, float]]) -> np.ndarray:
-        return reflectivity(Q, layers)
+    def _reflect(
+        self,
+        Q: np.ndarray,
+        layers: List[Dict[str, float]],
+        bkg: float = 0.0,
+    ) -> np.ndarray:
+        # layers already have 'rho', 'thickness', 'sigma'
+        return reflectivity(Q, layers, bkg=bkg)
