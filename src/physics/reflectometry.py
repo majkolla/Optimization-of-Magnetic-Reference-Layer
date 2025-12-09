@@ -1,7 +1,8 @@
 import numpy as np
 
 def _kz(Q, rho):
-    return np.sqrt((Q**2)/4.0 - 4.0*np.pi*(1e-6)*rho + 0j)
+    # Q in Å^-1, rho in Å^-2
+    return np.sqrt((Q**2)/4.0 - 4.0*np.pi*rho + 0j)
 
 def parratt_amplitude(Q, layers):
     k = [_kz(Q, float(L["rho"])) for L in layers]
@@ -13,13 +14,14 @@ def parratt_amplitude(Q, layers):
         k_i, k_j = k[j], k[j+1]
         rj = (k_i - k_j) / (k_i + k_j)
 
-        # Stable Nevot–Croce (damping only)
+        # Nevot–Croce roughness: sigma attached to *layer j*
         sigma_j = float(layers[j].get("sigma", 0.0))
         if sigma_j:
             expo = -2.0 * (sigma_j**2) * np.real(k_i * k_j)
-            expo = np.minimum(expo, 0.0)
+            expo = np.minimum(expo, 0.0)  # avoid overflow
             rj *= np.exp(expo)
 
+        # phase from thickness of layer j+1
         d_lower = float(layers[j+1].get("thickness", 0.0))
         phase = np.exp(2j * k_j * d_lower)
 
@@ -27,7 +29,7 @@ def parratt_amplitude(Q, layers):
 
     return Gamma
 
-def reflectivity(Q, layers, bkg=10**(-3)):
+def reflectivity(Q, layers, bkg=1e-3):
     return np.abs(parratt_amplitude(Q, layers))**2 + float(bkg)
 
 def spin_sld(rho_n, rho_m, spin='up'):
