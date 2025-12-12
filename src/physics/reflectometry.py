@@ -14,7 +14,7 @@ def parratt_amplitude(Q, layers):
         k_i, k_j = k[j], k[j+1]
         rj = (k_i - k_j) / (k_i + k_j)
 
-        # Nevot–Croce roughness: sigma attached to *layer j*
+        # Nevot–Croce roughness: sigma attached to layer j
         sigma_j = float(layers[j].get("sigma", 0.0))
         if sigma_j:
             expo = -2.0 * (sigma_j**2) * np.real(k_i * k_j)
