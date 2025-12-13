@@ -66,7 +66,6 @@ class Solver:
         
         Propose n new candidate points in packed search space 
         Each element is a 1D np.ndarray of length == number of params 
-        
         """
     @abstractmethod
     def tell(self, thetas: List[np.ndarray], values: Sequence[Any]) ->None: 
@@ -166,5 +165,4 @@ class Solver:
             history=history, 
             n_evals=n_evals, 
             meta={"problem_name": self.problem.name, "Maximize": self.maximize}
-        )
-    
+        ) 
