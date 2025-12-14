@@ -88,6 +88,7 @@ class Base1OptimizationProblem:
         a weight for Q, potentially to optimze for particular Q vals
     
     """ 
+    SLD_SCALE = 1e-6  # convert (10^-6 Å^-2) -> (Å^-2)
     def __init__(
                 self, 
                  materials: Materials, 
@@ -97,6 +98,7 @@ class Base1OptimizationProblem:
                  bounds_d: Bounds, 
                  bounds_cap: Bounds,
                  weight_fn: Optional[Callable[[np.ndarray], np.ndarray]] = None,
+                 SLD_SCALE = 1e-6
                 ):
         
         self.materials = materials 
@@ -107,6 +109,7 @@ class Base1OptimizationProblem:
         self.bounds_cap = bounds_cap
         self.validate()
         self.weight_fn = weight_fn
+        self.sld_scale = float(SLD_SCALE) # convert 10^-6 Å^-2 -> Å
 
     @property
     def cap_choices(self) -> list[str]: 
@@ -168,10 +171,14 @@ class Base1OptimizationProblem:
 
         for soi in self.soi_list:
             # build stacks without and with SOI (spin up and down)
-            layers_sub_up, layers_sub_down = self._layers(x_coti, d_mrl, d_cap, cap, soi=None)
-            layers_full_up, layers_full_down = self._layers(x_coti, d_mrl, d_cap, cap, soi=soi)
+            layers_sub_up, layers_sub_down = self._layers(
+                        x_coti=x_coti, d_mrl=d_mrl, d_cap=d_cap, cap=cap, soi=None
+                        )
+            layers_full_up, layers_full_down = self._layers(
+                        x_coti=x_coti, d_mrl=d_mrl, d_cap=d_cap, cap=cap, soi=soi
+                        )
 
-            # reflectivities
+               # reflectivities
             Rsub_up = self._reflect(self.Q, layers_sub_up)
             Rsub_dn = self._reflect(self.Q, layers_sub_down)
             Rfull_up = self._reflect(self.Q, layers_full_up)
@@ -249,7 +256,9 @@ class Base1OptimizationProblem:
         }
 
     # ----------------- stack builder part -------------------
-
+    def _rho(self, rho_in_1e6: float) -> float:
+        """Convert SLD given in 10^-6 Å^-2 into Å^-2 (what Parratt expects)."""
+        return float(rho_in_1e6) * self.SLD_SCALE
 
     def _air(self) -> Dict[str, float]:
         return {"rho": 0.0, "thickness": 0.0, "sigma": 0.0}
@@ -261,47 +270,58 @@ class Base1OptimizationProblem:
         cap: str,
         d_cap: float,
     ) -> None:
-        # For printing and pther testing 
         if cap == "none" or d_cap <= 0.0:
             return
-        cap_spec = self.materials.caps[cap]
-        up_stack.append({"rho": float(cap_spec.rho_n), "thickness": float(d_cap), "sigma": float(cap_spec.sigma)})
-        dn_stack.append({"rho": float(cap_spec.rho_n), "thickness": float(d_cap), "sigma": float(cap_spec.sigma)})
 
-    def layers_no_mrl(
-        self,
-        soi: Optional[SOISpec],
-    ) -> List[Dict[str, float]]:
-        """
-        Non polarized stacks for the "Without MRL" row:
-        - no SOI: air | Si
-        - with SOI: air | SOI | Si
-        """
+        cap_spec = self.materials.caps[cap]
+
+        # sigma on the cap layer => roughness at (cap | next layer below) = (cap | MRL)
+        up_stack.append({
+            "rho": self._rho(cap_spec.rho_n),
+            "thickness": float(d_cap),
+            "sigma": float(cap_spec.sigma),
+        })
+        dn_stack.append({
+            "rho": self._rho(cap_spec.rho_n),
+            "thickness": float(d_cap),
+            "sigma": float(cap_spec.sigma),
+        })
+
+    def layers_no_mrl(self, soi: Optional[SOISpec]) -> List[Dict[str, float]]:
         sub = self.materials.substrate
         stack: List[Dict[str, float]] = [self._air()]
         if soi is not None:
-            stack.append({"rho": float(soi.rho_n), "thickness": float(soi.thickness), "sigma": float(soi.sigma)})
-        stack.append({"rho": float(sub.rho_n), "thickness": 0.0, "sigma": float(sub.sigma)})
+            stack.append({
+                "rho": self._rho(soi.rho_n),
+                "thickness": float(soi.thickness),
+                "sigma": float(soi.sigma),  # (SOI | substrate) here
+            })
+        stack.append({
+            "rho": self._rho(sub.rho_n),
+            "thickness": 0.0,
+            "sigma": 0.0,  # substrate sigma is not used by your Parratt loop anyway
+        })
         return stack
 
     def layers_with_mrl(
         self,
         x_coti: float,
         d_mrl: float,
-        soi: Optional[SOISpec],
-        cap: str = "none",
-        d_cap: float = 0.0,
+        d_cap: float,
+        cap: str,
+        soi: Optional[SOISpec] = None,
     ) -> Tuple[List[Dict[str, float]], List[Dict[str, float]]]:
-        """
-        Spin stacks matching your notebook style:
-        - no SOI: air | (cap?) | MRL | Si
-        - with SOI: air | SOI | (cap?) | MRL | Si
-        """
+
         sub = self.materials.substrate
         mrl = self.materials.mrl
 
-        rho_n_mrl = x_coti * mrl.rho_n_Co + (1.0 - x_coti) * mrl.rho_n_Ti
-        rho_m_mrl = float(mrl.m_sld_from_x(x_coti))
+        # --- build MRL SLDs (inputs are in 10^-6 Å^-2, convert with _rho) ---
+        rho_n_mrl_1e6 = x_coti * mrl.rho_n_Co + (1.0 - x_coti) * mrl.rho_n_Ti
+        rho_m_mrl_1e6 = float(mrl.m_sld_from_x(x_coti))  # must be in same 10^-6 units
+
+        rho_n_mrl = self._rho(rho_n_mrl_1e6)
+        rho_m_mrl = self._rho(rho_m_mrl_1e6)
+
         rho_up_mrl = rho_n_mrl + rho_m_mrl
         rho_dn_mrl = rho_n_mrl - rho_m_mrl
 
@@ -309,26 +329,59 @@ class Base1OptimizationProblem:
         dn_stack: List[Dict[str, float]] = [self._air()]
 
         if soi is not None:
-            up_stack.append({"rho": float(soi.rho_n), "thickness": float(soi.thickness), "sigma": float(soi.sigma)})
-            dn_stack.append({"rho": float(soi.rho_n), "thickness": float(soi.thickness), "sigma": float(soi.sigma)})
+            # sigma on SOI => roughness at (SOI | next layer below) = (SOI | cap) or (SOI | MRL)
+            up_stack.append({
+                "rho": self._rho(soi.rho_n),
+                "thickness": float(soi.thickness),
+                "sigma": float(soi.sigma),
+            })
+            dn_stack.append({
+                "rho": self._rho(soi.rho_n),
+                "thickness": float(soi.thickness),
+                "sigma": float(soi.sigma),
+            })
 
         self._maybe_add_cap(up_stack, dn_stack, cap=cap, d_cap=d_cap)
 
-        # MRL (spin split). sigma here should stay consistent with YOUR reflectometry convention.
-        up_stack.append({"rho": float(rho_up_mrl), "thickness": float(d_mrl), "sigma": float(mrl.sigma_mrl_cap)})
-        dn_stack.append({"rho": float(rho_dn_mrl), "thickness": float(d_mrl), "sigma": float(mrl.sigma_mrl_cap)})
+        # MRL: sigma on MRL => roughness at (MRL | substrate)
+        up_stack.append({
+            "rho": float(rho_up_mrl),
+            "thickness": float(d_mrl),
+            "sigma": float(mrl.sigma_sub_mrl),
+        })
+        dn_stack.append({
+            "rho": float(rho_dn_mrl),
+            "thickness": float(d_mrl),
+            "sigma": float(mrl.sigma_sub_mrl),
+        })
 
-        # Substrate (semi-infinite)
-        up_stack.append({"rho": float(sub.rho_n), "thickness": 0.0, "sigma": float(mrl.sigma_sub_mrl)})
-        dn_stack.append({"rho": float(sub.rho_n), "thickness": 0.0, "sigma": float(mrl.sigma_sub_mrl)})
+        # substrate (semi-infinite)
+        up_stack.append({
+            "rho": self._rho(sub.rho_n),
+            "thickness": 0.0,
+            "sigma": 0.0,
+        })
+        dn_stack.append({
+            "rho": self._rho(sub.rho_n),
+            "thickness": 0.0,
+            "sigma": 0.0,
+        })
 
         return up_stack, dn_stack
-        
-    def _reflect(
+
+    def _layers(
         self,
-        Q: np.ndarray,
-        layers: List[Dict[str, float]],
-        bkg: float = 0.0,
-    ) -> np.ndarray:
-        # layers already have 'rho', 'thickness', 'sigma'
+        x_coti: float,
+        d_mrl: float,
+        d_cap: float,
+        cap: str,
+        soi: Optional[SOISpec] = None,
+    ) -> Tuple[List[Dict[str, float]], List[Dict[str, float]]]:
+        # optional safety clip (doesn't hurt optimization)
+        x_coti = float(np.clip(x_coti, self.bounds_x.lo, self.bounds_x.hi))
+        d_mrl  = float(np.clip(d_mrl,  self.bounds_d.lo, self.bounds_d.hi))
+        d_cap  = float(np.clip(d_cap,  self.bounds_cap.lo, self.bounds_cap.hi))
+        return self.layers_with_mrl(x_coti, d_mrl, d_cap, cap, soi=soi)
+
+    def _reflect(self, Q, layers, bkg: float = 1e-3) -> np.ndarray:
         return reflectivity(Q, layers, bkg=bkg)
