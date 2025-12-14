@@ -250,62 +250,80 @@ class Base1OptimizationProblem:
 
     # ----------------- stack builder part -------------------
 
-    def _layers(
+
+    def _air(self) -> Dict[str, float]:
+        return {"rho": 0.0, "thickness": 0.0, "sigma": 0.0}
+
+    def _maybe_add_cap(
+        self,
+        up_stack: List[Dict[str, float]],
+        dn_stack: List[Dict[str, float]],
+        cap: str,
+        d_cap: float,
+    ) -> None:
+        # For printing and pther testing 
+        if cap == "none" or d_cap <= 0.0:
+            return
+        cap_spec = self.materials.caps[cap]
+        up_stack.append({"rho": float(cap_spec.rho_n), "thickness": float(d_cap), "sigma": float(cap_spec.sigma)})
+        dn_stack.append({"rho": float(cap_spec.rho_n), "thickness": float(d_cap), "sigma": float(cap_spec.sigma)})
+
+    def layers_no_mrl(
+        self,
+        soi: Optional[SOISpec],
+    ) -> List[Dict[str, float]]:
+        """
+        Non polarized stacks for the "Without MRL" row:
+        - no SOI: air | Si
+        - with SOI: air | SOI | Si
+        """
+        sub = self.materials.substrate
+        stack: List[Dict[str, float]] = [self._air()]
+        if soi is not None:
+            stack.append({"rho": float(soi.rho_n), "thickness": float(soi.thickness), "sigma": float(soi.sigma)})
+        stack.append({"rho": float(sub.rho_n), "thickness": 0.0, "sigma": float(sub.sigma)})
+        return stack
+
+    def layers_with_mrl(
         self,
         x_coti: float,
         d_mrl: float,
-        d_cap: float,
-        cap: str,
         soi: Optional[SOISpec],
+        cap: str = "none",
+        d_cap: float = 0.0,
     ) -> Tuple[List[Dict[str, float]], List[Dict[str, float]]]:
         """
-        Build spin up and down stacks.
-
-        We store layer dicts as:
-            {'rho', 'thickness', 'sigma'}
-        which is exactly what physics.reflectometry expects.
+        Spin stacks matching your notebook style:
+        - no SOI: air | (cap?) | MRL | Si
+        - with SOI: air | SOI | (cap?) | MRL | Si
         """
         sub = self.materials.substrate
-        cap_spec = self.materials.caps[cap]
         mrl = self.materials.mrl
 
-        # nuclear SLD of alloy; magnetic SLD from user function
         rho_n_mrl = x_coti * mrl.rho_n_Co + (1.0 - x_coti) * mrl.rho_n_Ti
         rho_m_mrl = float(mrl.m_sld_from_x(x_coti))
         rho_up_mrl = rho_n_mrl + rho_m_mrl
         rho_dn_mrl = rho_n_mrl - rho_m_mrl
 
-        def L(rho, thickness, sigma) -> Dict[str, float]:
-            return {
-                "rho": float(rho),
-                "thickness": float(thickness),
-                "sigma": float(sigma),
-            }
+        up_stack: List[Dict[str, float]] = [self._air()]
+        dn_stack: List[Dict[str, float]] = [self._air()]
 
-        up_stack: List[Dict[str, float]] = []
-        dn_stack: List[Dict[str, float]] = []
-
-        # optional SOI on top
         if soi is not None:
-            up_stack.append(L(soi.rho_n, soi.thickness, soi.sigma))
-            dn_stack.append(L(soi.rho_n, soi.thickness, soi.sigma))
+            up_stack.append({"rho": float(soi.rho_n), "thickness": float(soi.thickness), "sigma": float(soi.sigma)})
+            dn_stack.append({"rho": float(soi.rho_n), "thickness": float(soi.thickness), "sigma": float(soi.sigma)})
 
-        # cap (non-magnetic)
-        up_stack.append(L(cap_spec.rho_n, d_cap, cap_spec.sigma))
-        dn_stack.append(L(cap_spec.rho_n, d_cap, cap_spec.sigma))
+        self._maybe_add_cap(up_stack, dn_stack, cap=cap, d_cap=d_cap)
 
-        # MRL (spin split)
-        up_stack.append(L(rho_up_mrl, d_mrl, mrl.sigma_mrl_cap))
-        dn_stack.append(L(rho_dn_mrl, d_mrl, mrl.sigma_mrl_cap))
+        # MRL (spin split). sigma here should stay consistent with YOUR reflectometry convention.
+        up_stack.append({"rho": float(rho_up_mrl), "thickness": float(d_mrl), "sigma": float(mrl.sigma_mrl_cap)})
+        dn_stack.append({"rho": float(rho_dn_mrl), "thickness": float(d_mrl), "sigma": float(mrl.sigma_mrl_cap)})
 
-        # substrate (semi-infinite: thickness=0)
-        up_stack.append(L(sub.rho_n, 0.0, mrl.sigma_sub_mrl))
-        dn_stack.append(L(sub.rho_n, 0.0, mrl.sigma_sub_mrl))
+        # Substrate (semi-infinite)
+        up_stack.append({"rho": float(sub.rho_n), "thickness": 0.0, "sigma": float(mrl.sigma_sub_mrl)})
+        dn_stack.append({"rho": float(sub.rho_n), "thickness": 0.0, "sigma": float(mrl.sigma_sub_mrl)})
 
         return up_stack, dn_stack
-
         
-    
     def _reflect(
         self,
         Q: np.ndarray,
