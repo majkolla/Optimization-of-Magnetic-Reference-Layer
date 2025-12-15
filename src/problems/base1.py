@@ -58,7 +58,9 @@ class Materials:
     caps: dict[str: CapSpec]
     mrl: MRL
 
-class Base1OptimizationProblem:
+from problems.interfaces import OptimizationProblemProtocol
+
+class Base1OptimizationProblem(OptimizationProblemProtocol):
     """
     Base1 problem [See base1 problem in report/main.tex for more information]:
     x = [x_co-ti, d_MRL,cap_material]
