@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Tuple, Optional, Sequence, Protocol
 from abc import ABC, abstractmethod
 import numpy as np 
-
+import json
 from problems.interfaces import OptimizationProblemProtocol
 from solvers.search_space import SearchSpace
 
@@ -13,7 +13,7 @@ Result container
 
 """
 
-class OptimzationProblemProtocol(Protocol): 
+class OptimizationProblemProtocol(Protocol): 
     """
     An interface both Base1 and Base2 (in the future base3) must satisfy
     """
@@ -36,6 +36,76 @@ class RunResults:
     n_evals: int = 0 
     meta: Dict[str, Any] = field(default_factory=list)
 
+    @staticmethod
+    def _to_json_safe(obj: Any) -> Any:
+        """Recursively convert an object to something JSON serializable."""
+        if isinstance(obj, dict):
+            return {str(k): RunResults._to_json_safe(v) for k, v in obj.items()}
+
+        if isinstance(obj, (list, tuple)):
+            return [RunResults._to_json_safe(v) for v in obj]
+
+        # numpy arrays
+        if hasattr(obj, "tolist") and callable(obj.tolist):
+            return obj.tolist()
+
+        # numpy scalars
+        if hasattr(obj, "item") and callable(obj.item):
+            try:
+                return obj.item()
+            except Exception:
+                pass
+
+        return obj
+
+    def to_dict(self) -> Dict[str, Any]:
+        return self._to_json_safe({
+            "x_best": self.x_best,
+            "y_best": self.y_best,
+            "history": self.history,
+            "n_evals": self.n_evals,
+            "meta": self.meta,
+        })
+
+    def to_json(self, path: str, indent: int = 2) -> None:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(self.to_dict(), f, indent=indent)
+
+    def summary(self, max_history: int = 3) -> str:
+        lines: list[str] = []
+        lines.append("=== RunResults ===")
+        lines.append(f"n_evals : {self.n_evals}")
+        lines.append(f"y_best  : {self.y_best}")
+        lines.append("x_best  :")
+        for k, v in self.x_best.items():
+            lines.append(f"  {k:10s} = {v}")
+
+        lines.append(f"history : {len(self.history)} entries")
+        if self.history:
+            lines.append("history (first/last):")
+            head = self.history[:max_history]
+            tail = self.history[-max_history:] if len(self.history) > max_history else []
+            for i, h in enumerate(head):
+                lines.append(f"  [{i}] y={h.get('y')} x={h.get('x')}")
+            if tail:
+                lines.append("  ...")
+                offset = len(self.history) - len(tail)
+                for i, h in enumerate(tail, start=offset):
+                    lines.append(f"  [{i}] y={h.get('y')} x={h.get('x')}")
+
+        if self.meta:
+            lines.append(f"meta    : {self.meta}")
+
+        return "\n".join(lines)
+
+    def __str__(self) -> str:
+        return self.summary()
+
+    def __repr__(self) -> str:
+        return (
+            f"RunResults(y_best={self.y_best}, n_evals={self.n_evals}, "
+            f"x_best={self.x_best}, history_len={len(self.history)})"
+        )
 class Solver: 
     """
     Core solver API (ask/tell + run) 
