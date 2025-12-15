@@ -106,6 +106,7 @@ class RunResults:
             f"RunResults(y_best={self.y_best}, n_evals={self.n_evals}, "
             f"x_best={self.x_best}, history_len={len(self.history)})"
         )
+
 class Solver: 
     """
     Core solver API (ask/tell + run) 
