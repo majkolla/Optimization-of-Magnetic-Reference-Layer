@@ -27,8 +27,6 @@
     - see if we can get .73 
 - run it on parameters of itnerest
 
-
-
 # Meeting 3
 
 MAKE SURE ALL THOSE WORK
