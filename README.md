@@ -22,7 +22,7 @@
 
 
 ## Optimzation problem 
-There may be multiple configurations that returns similar results, thus getting the *best* configurations is about finding a configurations that does more than simply perform well with some metric. We may have errors in construction, we may have stability or robustness problems. 
+There may be multiple configurations that returns similar results, thus getting the *best* configurations is about finding a configurations that does more than simply perform well with some metric. We may have errors in construction, we may have stability or robustness problems.  
 
 For problem defintion *base1* we have:
 
