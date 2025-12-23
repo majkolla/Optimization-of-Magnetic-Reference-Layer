@@ -13,4 +13,5 @@ def mcf(Q, S_up, S_down, w=None):
 
 def tsf(foms_over_types):
     # foms_over_types: iterable of (SFM_up, SFM_down, MCF) per SOI type
-    return sum(Su + Sd + Mcf for (Su, Sd, Mcf) in foms_over_types)
+    # Legacy Definition: 0.5 * |Area_up - Area_down| + 0.5 * MCF
+    return sum(0.5 * abs(Su - Sd) + 0.5 * Mcf for (Su, Sd, Mcf) in foms_over_types)
