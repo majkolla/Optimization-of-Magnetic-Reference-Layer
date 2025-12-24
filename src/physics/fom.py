@@ -1,7 +1,7 @@
 import numpy as np
 
 def sensitivity(Q, R_sub, R_full, eps=1e-30):
-    return (R_sub - R_full) / (R_sub + R_full + eps)
+    return (R_full - R_sub) / (R_sub + eps)
 
 def sfm(Q, S, w=None):
     y = np.abs(S) if w is None else np.abs(S) * w 
