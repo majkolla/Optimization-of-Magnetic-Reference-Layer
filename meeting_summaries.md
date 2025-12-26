@@ -17,7 +17,6 @@
 - better materials than Co-Ti
 - reference layer? (for non polizerar thing so we dont need no magnetic stuff)
 
-
 - Figure of merit 
 
 # Meeting 2 
