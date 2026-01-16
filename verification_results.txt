@@ -39,3 +39,14 @@ Q          | GenX_Norm  | Lib        | Diff
 0.2905     | 1.8095e-11 | 1.3689e-07 | 1.3687e-07
 
 Mean Abs Diff: 1.9428e-03
+
+
+
+
+-------------------------
+ want you to look at the 
+Solver.ipynb
+  Now, i just want th e evolution alg into L-bfgs alg to find the best one. I want you to write above every cell where you define the SOI, MRL, capping layer and their stats and all that. I want you to write explicity what each parameter in the objects means, and i want you to produce relfection plots and sensitivity plots for all the capping layers. For now, only write code so the solver solves for the coti set to the pre value in the Solver.ipynb. I want the text to be clear and concise above each cell explaining what everything is and how to use it. Create a new notebook call it presentaion
+ 
+
+There is a presention notebook now, i want to use the evolutionary first then i use the l-bhst to get closer to optima. I want you to document what each parameter does, also the layers are defined in the problem class? meaning that users cannot really change those dynamics. Explain that. 
