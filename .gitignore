@@ -12,6 +12,7 @@ report/*.synctex
 *.synctex
 
 Opt_paper.pdf
+opt.pdf
 .latex-preview-cache/*
 
 MagneticReferenceLayer
